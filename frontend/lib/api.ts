@@ -29,6 +29,11 @@ api.interceptors.response.use(
     const responseDetail = String(error?.response?.data?.detail || '')
     const isAuthRoute = requestUrl.includes('/api/v1/auth/')
 
+    if (!error?.response) {
+      toast.error(`Network error while calling API (${API_BASE_URL}). Check deploy/env URL and HTTPS.`)
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         useAuthStore.getState().logout()

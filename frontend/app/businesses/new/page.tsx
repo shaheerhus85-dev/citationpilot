@@ -8,6 +8,7 @@ import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, FormInput, FormTextArea, PageCard, ProtectedRoute, SkeletonBlock } from '@/components/dashboard/ui'
 import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
+import { parseError } from '@/lib/utils'
 
 const emptyForm = {
   business_name: '',
@@ -72,7 +73,7 @@ export default function BusinessFormPage() {
       }
       router.push('/businesses')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save business')
+      toast.error(parseError(error))
     } finally {
       setSubmitting(false)
     }
