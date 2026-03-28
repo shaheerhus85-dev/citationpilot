@@ -1,9 +1,12 @@
 import os
+import logging
 from functools import lru_cache
 from typing import List
 
 from pydantic import EmailStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -102,12 +105,15 @@ class Settings(BaseSettings):
             required = {
                 "DATABASE_URL": self.DATABASE_URL,
                 "FRONTEND_URL": self.FRONTEND_URL,
-                "GMAIL_USER": self.GMAIL_USER,
-                "GMAIL_APP_PASSWORD": self.GMAIL_APP_PASSWORD,
             }
             missing = [key for key, value in required.items() if not value]
             if missing:
                 raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+
+        if not self.smtp_enabled:
+            logger.warning(
+                "SMTP disabled: set GMAIL_USER and GMAIL_APP_PASSWORD to enable contact/verification email delivery."
+            )
         return self
 
     @property
