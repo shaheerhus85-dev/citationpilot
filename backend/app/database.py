@@ -1,18 +1,33 @@
 """Database setup and session management."""
+import logging
+import os
+
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from .config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
-raw_database_url = settings.DATABASE_URL
+
+def _mask_db_url(url: str) -> str:
+    if "://" not in url or "@" not in url:
+        return url
+    scheme, rest = url.split("://", 1)
+    _creds, host_part = rest.split("@", 1)
+    return f"{scheme}://***:***@{host_part}"
+
+raw_database_url = os.getenv("DATABASE_URL") or settings.DATABASE_URL
 if raw_database_url.startswith("postgresql://"):
     raw_database_url = raw_database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 if raw_database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in raw_database_url:
     separator = "&" if "?" in raw_database_url else "?"
     raw_database_url = f"{raw_database_url}{separator}sslmode=require"
+
+if os.getenv("DEBUG_DB_URL", "false").strip().lower() == "true":
+    logger.warning("DB URL (masked): %s", _mask_db_url(raw_database_url))
 
 is_sqlite = raw_database_url.startswith("sqlite")
 
