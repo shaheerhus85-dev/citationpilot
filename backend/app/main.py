@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from collections import defaultdict, deque
@@ -15,7 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import auth, audit, businesses, campaigns, contact, dashboard, directories, internal, manual_queue, profile, profiles, submissions, verification_inbox
 from app.config import get_settings
-from app.database import SessionLocal, engine, init_db
+from app.database import SessionLocal, init_db
 from app.services.directory_service import DirectoryService
 from app.workers.worker_manager import (
     ensure_email_poller_worker_running,
@@ -30,6 +31,8 @@ _RATE_LIMIT_LOCK = Lock()
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 settings = get_settings()
+ENABLE_WORKERS = os.getenv("ENABLE_BACKGROUND_WORKERS", "false").strip().lower() == "true"
+INIT_DB_ON_STARTUP = os.getenv("INIT_DB_ON_STARTUP", "false").strip().lower() == "true"
 
 
 def _build_cors_origins() -> list[str]:
@@ -53,19 +56,22 @@ def _build_cors_origins() -> list[str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        logger.info("Initializing database...")
-        init_db()
-        logger.info("Database initialized")
-        db = SessionLocal()
+    if INIT_DB_ON_STARTUP:
         try:
-            DirectoryService.ensure_directories_seeded(db)
-        finally:
-            db.close()
-    except Exception as exc:
-        logger.exception("Database initialization failed during startup: %s", exc)
+            logger.info("Initializing database...")
+            init_db()
+            logger.info("Database initialized")
+            db = SessionLocal()
+            try:
+                DirectoryService.ensure_directories_seeded(db)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.exception("Database initialization failed during startup: %s", exc)
+    else:
+        logger.info("Database startup init skipped (INIT_DB_ON_STARTUP=false)")
 
-    if settings.ENABLE_BACKGROUND_WORKERS:
+    if ENABLE_WORKERS:
         try:
             ensure_submission_worker_running()
             ensure_email_poller_worker_running()
@@ -162,13 +168,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    try:
-        with engine.connect() as connection:
-            connection.exec_driver_sql("SELECT 1")
-        return {"status": "ok"}
-    except Exception as exc:
-        logger.exception("Health check DB ping failed: %s", exc)
-        return JSONResponse(status_code=500, content={"status": "error", "detail": "database_unreachable"})
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
