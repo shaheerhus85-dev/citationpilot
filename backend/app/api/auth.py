@@ -6,10 +6,19 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.config import settings
-from app.schemas.auth import LoginRequest, RefreshRequest, SignupRequest, TokenResponse, UserResponse, VerifyEmailRequest
+from app.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    ResendVerificationRequest,
+    SignupRequest,
+    TokenResponse,
+    UserResponse,
+    VerifyEmailRequest,
+)
 from app.services.auth_service import (
     get_current_active_user,
     login as login_user,
+    resend_verification_email,
     refresh_access_token,
     signup,
     verify_email,
@@ -45,6 +54,19 @@ def verify_email_endpoint(payload: VerifyEmailRequest, db: Session = Depends(get
         access_token=result["access_token"],
         refresh_token=result["refresh_token"],
         user=UserResponse.model_validate(result["user"]),
+    )
+
+
+@router.post("/resend-verification")
+def resend_verification_endpoint(payload: ResendVerificationRequest, db: Session = Depends(get_db)):
+    sent = resend_verification_email(db, payload.email)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK if sent else status.HTTP_202_ACCEPTED,
+        content={
+            "message": "Verification email sent" if sent else "Could not send email right now. Please try again shortly.",
+            "email_delivery": sent,
+            "verification_expires_in_minutes": settings.EMAIL_VERIFICATION_EXPIRE_MINUTES,
+        },
     )
 
 

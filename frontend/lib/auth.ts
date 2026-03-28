@@ -49,6 +49,11 @@ export async function verifyEmail(userId: string, token: string) {
   return data
 }
 
+export async function resendVerification(email: string) {
+  const { data } = await api.post('/api/v1/auth/resend-verification', { email })
+  return data
+}
+
 export function logout() {
   clearAuthToken()
   if (typeof window !== 'undefined') window.location.href = '/'

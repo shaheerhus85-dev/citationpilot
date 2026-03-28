@@ -35,7 +35,11 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const response = await signupRequest(formData.email, formData.password, formData.full_name)
-      toast.success(response.message || 'Verification email sent')
+      if (response.email_delivery === false) {
+        toast.error(response.message || 'Account created, but verification email could not be delivered.')
+      } else {
+        toast.success(response.message || 'Verification email sent')
+      }
       router.replace(`/verify-email?user_id=${response.user_id}&email=${encodeURIComponent(formData.email)}`)
     } catch (error) {
       const responseError = error as { response?: { data?: { detail?: string } } }

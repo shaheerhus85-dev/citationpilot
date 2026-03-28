@@ -153,6 +153,32 @@ def verify_email(db: Session, user_id: int, token: str) -> dict[str, Any]:
     return _build_auth_payload(user)
 
 
+def resend_verification_email(db: Session, email: str) -> bool:
+    """Regenerate and resend verification email for an unverified account."""
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user.is_verified:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified")
+
+    now = datetime.utcnow()
+    user.verification_token = create_verification_token()
+    user.verification_sent_at = now
+    user.verification_expires_at = now + timedelta(minutes=settings.EMAIL_VERIFICATION_EXPIRE_MINUTES)
+    user.updated_at = now
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    verify_url = f"{settings.FRONTEND_URL}/verify-email?user_id={user.id}&token={user.verification_token}"
+    try:
+        send_verification_email(user.email, user.full_name or user.username, verify_url)
+        return True
+    except Exception as exc:
+        logger.warning("Resend verification email failed for user_id=%s: %s", user.id, exc)
+        return False
+
+
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     """Compatibility helper to authenticate by email or username."""
     user = db.query(User).filter((User.email == username) | (User.username == username)).first()

@@ -2,10 +2,11 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-import { AuthScreenLoader, PageCard } from '@/components/dashboard/ui'
-import { verifyEmail } from '@/lib/auth'
+import { ActionButton, AuthScreenLoader, PageCard } from '@/components/dashboard/ui'
+import { resendVerification, verifyEmail } from '@/lib/auth'
 import { useAuthStore } from '@/lib/store'
 
 export default function VerifyEmailPage() {
@@ -13,6 +14,7 @@ export default function VerifyEmailPage() {
   const router = useRouter()
   const login = useAuthStore((state) => state.login)
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('loading')
+  const [sending, setSending] = useState(false)
 
   useEffect(() => {
     const userId = params.get('user_id')
@@ -46,6 +48,28 @@ export default function VerifyEmailPage() {
 
   if (status === 'pending') {
     const email = params.get('email')
+
+    async function handleResend() {
+      if (!email) {
+        toast.error('Email is required to resend verification')
+        return
+      }
+      setSending(true)
+      try {
+        const response = await resendVerification(email)
+        if (response?.email_delivery === false) {
+          toast.error(response?.message || 'Could not send verification email right now')
+        } else {
+          toast.success(response?.message || 'Verification email sent')
+        }
+      } catch (error: any) {
+        const detail = String(error?.response?.data?.detail || 'Failed to resend verification email')
+        toast.error(detail)
+      } finally {
+        setSending(false)
+      }
+    }
+
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] px-4 py-12">
         <PageCard className="w-full max-w-lg p-8 text-center">
@@ -57,6 +81,18 @@ export default function VerifyEmailPage() {
             Open your email and click the verification link. This page will work automatically when opened from that
             link.
           </p>
+          <div className="mt-6">
+            <ActionButton
+              type="button"
+              tone="secondary"
+              icon={RefreshCw}
+              onClick={handleResend}
+              disabled={sending || !email}
+              className="mx-auto"
+            >
+              {sending ? 'Resending...' : 'Resend verification email'}
+            </ActionButton>
+          </div>
         </PageCard>
       </div>
     )
