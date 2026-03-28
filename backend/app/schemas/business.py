@@ -17,6 +17,7 @@ class BusinessRequest(BaseModel):
     category: str
     website: str | None = None
     description: str | None = None
+    logo_url: str | None = None
     postal_code: str | None = None
 
 

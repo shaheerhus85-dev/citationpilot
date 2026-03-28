@@ -25,6 +25,7 @@ export default function CampaignCreatePage() {
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([])
   const [selectedBusinessId, setSelectedBusinessId] = useState(searchParams.get('business') || '')
   const [campaignName, setCampaignName] = useState('')
+  const [targetCountry, setTargetCountry] = useState('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -37,6 +38,7 @@ export default function CampaignCreatePage() {
         setBusinesses(response.data)
         if (!selectedBusinessId && response.data.length > 0) {
           setSelectedBusinessId(String(response.data[0].id))
+          setTargetCountry(response.data[0].country || '')
         }
       })
       .catch(() => toast.error('Failed to load businesses'))
@@ -47,6 +49,12 @@ export default function CampaignCreatePage() {
     () => businesses.find((item) => String(item.id) === selectedBusinessId) || null,
     [businesses, selectedBusinessId]
   )
+
+  useEffect(() => {
+    if (selectedBusiness?.country) {
+      setTargetCountry(selectedBusiness.country)
+    }
+  }, [selectedBusiness?.country])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -66,6 +74,7 @@ export default function CampaignCreatePage() {
         directory_ids: selectedIds,
         campaign_name: campaignName || undefined,
         requested_count: selectedIds.length,
+        target_country: targetCountry || undefined,
       })
       toast.success('Campaign started successfully')
       router.push(`/campaigns/${response.data.id}`)
@@ -120,6 +129,12 @@ export default function CampaignCreatePage() {
                   placeholder="FusionKode Local SEO Push"
                   value={campaignName}
                   onChange={(event) => setCampaignName(event.target.value)}
+                />
+                <FormInput
+                  label="Target Country"
+                  placeholder="Pakistan"
+                  value={targetCountry}
+                  onChange={(event) => setTargetCountry(event.target.value)}
                 />
               </div>
 

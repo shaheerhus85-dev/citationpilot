@@ -22,6 +22,7 @@ class CampaignCreateRequest(BaseModel):
     directory_ids: list[int] = Field(default_factory=list)
     campaign_name: str | None = None
     requested_count: int | None = Field(default=None, ge=10, le=50)
+    target_country: str | None = None
 
 
 @router.post("/", response_model=SubmissionRequestResponse, status_code=status.HTTP_201_CREATED)
@@ -38,12 +39,14 @@ def create_campaign(
             business_profile_id=payload.business_profile_id,
             directory_ids=payload.directory_ids,
             requested_count=payload.requested_count,
+            target_country=payload.target_country,
         )
     target_count = payload.requested_count or 10
     selection = IntelligentDirectorySelectionService.select_for_business(
         db=db,
         business_id=payload.business_profile_id,
         limit=target_count,
+        country_override=payload.target_country,
         user_id=cast(int, current_user.id),
     )
     selected_ids = [item["id"] for item in selection["directories"]]
@@ -54,11 +57,13 @@ def create_campaign(
             business_profile_id=payload.business_profile_id,
             directory_ids=selected_ids,
             requested_count=target_count,
+            target_country=payload.target_country,
         )
 
     fallback = SubmissionRequestCreate(
         business_profile_id=payload.business_profile_id,
         requested_count=target_count,
+        target_country=payload.target_country,
     )
     return SubmissionService.create_submission_request(db, cast(int, current_user.id), fallback)
 

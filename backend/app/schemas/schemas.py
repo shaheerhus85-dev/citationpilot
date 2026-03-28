@@ -60,6 +60,7 @@ class BusinessProfileBase(BaseModel):
     address_line1: Optional[str] = None
     address_line2: Optional[str] = None
     description: Optional[str] = None
+    logo_url: Optional[str] = None
     category: str
     country: str
     city: Optional[str] = None
@@ -79,6 +80,7 @@ class BusinessProfileUpdate(BaseModel):
     address_line1: Optional[str] = None
     address_line2: Optional[str] = None
     description: Optional[str] = None
+    logo_url: Optional[str] = None
     category: Optional[str] = None
     country: Optional[str] = None
     city: Optional[str] = None
@@ -97,6 +99,7 @@ class BusinessProfileResponse(BusinessProfileBase, ORMModel):
 class SubmissionRequestCreate(BaseModel):
     business_profile_id: int
     requested_count: int = Field(default=10, ge=10, le=50)
+    target_country: Optional[str] = None
 
 
 class SubmissionRequestResponse(ORMModel):
@@ -104,6 +107,7 @@ class SubmissionRequestResponse(ORMModel):
     user_id: int
     business_profile_id: int
     requested_count: int
+    target_country: Optional[str] = None
     status: str
     progress_percentage: float
     success_rate: float

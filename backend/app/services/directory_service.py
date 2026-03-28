@@ -58,6 +58,7 @@ class DirectoryService:
                     continue
 
                 category = (row.get("category") or "General").strip()
+                country = (row.get("country") or "Global").strip()
                 tier = DirectoryService._parse_tier(row.get("tier"))
                 credibility = 0.95 if tier == DirectoryTier.TIER_1 else 0.8 if tier == DirectoryTier.TIER_2 else 0.65
 
@@ -65,6 +66,7 @@ class DirectoryService:
                 if existing:
                     existing.name = name
                     existing.category = category
+                    existing.country = country
                     existing.tier = tier
                     existing.credibility_score = credibility
                     existing.is_active = True
@@ -78,7 +80,7 @@ class DirectoryService:
                         name=name,
                         url=url,
                         category=category,
-                        country="US",
+                        country=country,
                         tier=tier,
                         submission_method="web_form",
                         requires_verification=True,
@@ -96,9 +98,6 @@ class DirectoryService:
 
     @staticmethod
     def ensure_directories_seeded(db: Session) -> int:
-        active_count = db.query(Directory).filter(Directory.is_active == True).count()
-        if active_count >= 50:
-            return active_count
         DirectoryService.load_directories_from_csv(db)
         return db.query(Directory).filter(Directory.is_active == True).count()
 
@@ -126,10 +125,16 @@ class DirectoryService:
         return directory
 
     @staticmethod
-    def get_directories_for_campaign(db: Session, business_category: str, count: int) -> list[Directory]:
+    def get_directories_for_campaign(
+        db: Session,
+        business_category: str,
+        count: int,
+        target_country: str | None = None,
+    ) -> list[Directory]:
         DirectoryService.ensure_directories_seeded(db)
         requested = max(1, count)
         category_query = (business_category or "").strip().lower()
+        country_query = (target_country or "").strip().lower()
         active_directories = cast(list[Directory], db.query(Directory).filter(Directory.is_active == True).all())
 
         def ordered(items: list[Directory]) -> list[Directory]:
@@ -146,15 +151,37 @@ class DirectoryService:
             for directory in active_directories
             if category_query and category_query in (directory.category or "").lower()
         ]
+        country_matches = [
+            directory
+            for directory in active_directories
+            if country_query
+            and (
+                country_query in (directory.country or "").lower()
+                or (directory.country or "").strip().lower() in {"global", "all"}
+            )
+        ]
         general_matches = [
             directory
             for directory in active_directories
             if (directory.category or "").strip().lower() == "general"
         ]
+        category_country_matches = [
+            directory
+            for directory in category_matches
+            if not country_query
+            or country_query in (directory.country or "").lower()
+            or (directory.country or "").strip().lower() in {"global", "all"}
+        ]
 
         selected: list[Directory] = []
         seen: set[int] = set()
-        for bucket in (ordered(category_matches), ordered(general_matches), ordered(active_directories)):
+        for bucket in (
+            ordered(category_country_matches),
+            ordered(country_matches),
+            ordered(category_matches),
+            ordered(general_matches),
+            ordered(active_directories),
+        ):
             for directory in bucket:
                 if directory.id in seen:
                     continue
@@ -165,5 +192,15 @@ class DirectoryService:
         return selected
 
     @staticmethod
-    def get_directories_for_profile(db: Session, profile: BusinessProfile, count: int) -> list[Directory]:
-        return DirectoryService.get_directories_for_campaign(db, profile.category, count)
+    def get_directories_for_profile(
+        db: Session,
+        profile: BusinessProfile,
+        count: int,
+        target_country: str | None = None,
+    ) -> list[Directory]:
+        return DirectoryService.get_directories_for_campaign(
+            db,
+            profile.category,
+            count,
+            target_country=target_country or profile.country,
+        )

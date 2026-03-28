@@ -24,7 +24,6 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_HOURS: int = 24
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     EMAIL_VERIFICATION_EXPIRE_MINUTES: int = 60
-    ALLOW_SIGNUP_WITHOUT_EMAIL_VERIFICATION: bool = True
     STRICT_ENV_VALIDATION: bool = False
 
     DATABASE_URL: str = "sqlite:///./app.db"
@@ -86,7 +85,6 @@ class Settings(BaseSettings):
         "PLAYWRIGHT_HEADLESS",
         "MANUAL_QUEUE_ENABLED",
         "STORE_FAILURE_SCREENSHOTS",
-        "ALLOW_SIGNUP_WITHOUT_EMAIL_VERIFICATION",
         mode="before",
     )
     @classmethod

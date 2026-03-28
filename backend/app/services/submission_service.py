@@ -44,6 +44,7 @@ class BusinessProfileService(BaseService):
             address_line1=profile_data.address_line1,
             address_line2=profile_data.address_line2,
             description=profile_data.description,
+            logo_url=profile_data.logo_url,
             category=profile_data.category,
             country=profile_data.country,
             city=profile_data.city,
@@ -115,6 +116,7 @@ class SubmissionService(BaseService):
                 user_id=user_id,
                 business_profile_id=request_data.business_profile_id,
                 requested_count=request_data.requested_count,
+                target_country=(request_data.target_country or profile.country),
                 status=CampaignStatus.PENDING.value,
                 progress_percentage=0.0,
                 success_rate=0.0,
@@ -123,7 +125,12 @@ class SubmissionService(BaseService):
             db.add(submission_request)
             db.flush()
 
-            directories = DirectoryService.get_directories_for_profile(db, profile, request_data.requested_count)
+            directories = DirectoryService.get_directories_for_profile(
+                db,
+                profile,
+                request_data.requested_count,
+                target_country=request_data.target_country,
+            )
             if not directories:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No directories available for this campaign")
 
@@ -166,6 +173,7 @@ class SubmissionService(BaseService):
         business_profile_id: int,
         directory_ids: list[int] | None = None,
         requested_count: int | None = None,
+        target_country: str | None = None,
     ) -> SubmissionRequest:
         profile = db.query(BusinessProfile).filter(
             BusinessProfile.id == business_profile_id,
@@ -184,6 +192,7 @@ class SubmissionService(BaseService):
                 user_id=user_id,
                 business_profile_id=business_profile_id,
                 requested_count=count,
+                target_country=(target_country or profile.country),
                 status=CampaignStatus.PENDING.value,
                 progress_percentage=0.0,
                 success_rate=0.0,
@@ -207,7 +216,12 @@ class SubmissionService(BaseService):
                         detail=f"Some directories were not found or inactive: {missing_ids}",
                     )
             else:
-                directories = DirectoryService.get_directories_for_profile(db, profile, count)
+                directories = DirectoryService.get_directories_for_profile(
+                    db,
+                    profile,
+                    count,
+                    target_country=target_country,
+                )
 
             if not directories:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No directories available for this campaign")

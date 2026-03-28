@@ -96,6 +96,7 @@ def _apply_sqlite_safe_migrations() -> None:
     if "business_profiles" in inspector.get_table_names():
         _ensure_column("business_profiles", "address_line1", "VARCHAR")
         _ensure_column("business_profiles", "address_line2", "VARCHAR")
+        _ensure_column("business_profiles", "logo_url", "VARCHAR")
         _ensure_column("business_profiles", "postal_code", "VARCHAR")
         _ensure_column("business_profiles", "updated_at", "DATETIME")
 
@@ -117,6 +118,7 @@ def _apply_sqlite_safe_migrations() -> None:
 
     if "submission_requests" in inspector.get_table_names():
         _ensure_column("submission_requests", "status", "VARCHAR DEFAULT 'pending'")
+        _ensure_column("submission_requests", "target_country", "VARCHAR")
         _ensure_column("submission_requests", "progress_percentage", "FLOAT DEFAULT 0")
         _ensure_column("submission_requests", "success_rate", "FLOAT DEFAULT 0")
         _ensure_column("submission_requests", "updated_at", "DATETIME")
@@ -145,3 +147,9 @@ def _apply_postgres_safe_migrations() -> None:
     _ensure_column("users", "verification_expires_at", "TIMESTAMP")
     _ensure_column("users", "last_login_at", "TIMESTAMP")
     _ensure_column("users", "updated_at", "TIMESTAMP")
+
+    if "business_profiles" in inspector.get_table_names():
+        _ensure_column("business_profiles", "logo_url", "VARCHAR(500)")
+
+    if "submission_requests" in inspector.get_table_names():
+        _ensure_column("submission_requests", "target_country", "VARCHAR(100)")

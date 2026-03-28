@@ -12,7 +12,7 @@ import { useAuthStore } from '@/lib/store'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { isAuthenticated, hydrated, login } = useAuthStore()
+  const { isAuthenticated, hydrated } = useAuthStore()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,12 +35,6 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const response = await signupRequest(formData.email, formData.password, formData.full_name)
-      if (response.auto_verified && response.access_token && response.refresh_token && response.user) {
-        login(response.user, response.access_token, response.refresh_token)
-        toast.success(response.message || 'Account created successfully')
-        router.replace('/dashboard')
-        return
-      }
       if (response.email_delivery === false) {
         toast.error(response.message || 'Account created, but verification email could not be delivered.')
       } else {
