@@ -19,13 +19,17 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     const userId = params.get('user_id')
     const token = params.get('token')
-    if (!userId) {
-      setStatus('error')
-      return
-    }
+    const email = params.get('email')
 
-    if (!token) {
-      setStatus('pending')
+    // Support both URL shapes:
+    // 1) verify link from email: ?user_id=...&token=...
+    // 2) pending screen from auth flow: ?email=...
+    if (!userId || !token) {
+      if (email || userId) {
+        setStatus('pending')
+      } else {
+        setStatus('error')
+      }
       return
     }
 
