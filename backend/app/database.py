@@ -6,11 +6,24 @@ from .config import get_settings
 
 settings = get_settings()
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=settings.DEBUG,
-)
+raw_database_url = settings.DATABASE_URL
+if raw_database_url.startswith("postgresql://"):
+    raw_database_url = raw_database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+if raw_database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in raw_database_url:
+    separator = "&" if "?" in raw_database_url else "?"
+    raw_database_url = f"{raw_database_url}{separator}sslmode=require"
+
+is_sqlite = raw_database_url.startswith("sqlite")
+
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "pool_pre_ping": True,
+}
+if is_sqlite:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+engine = create_engine(raw_database_url, **engine_kwargs)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -29,7 +42,8 @@ def get_db() -> Session:
 def init_db() -> None:
     """Initialize database by creating all tables and applying safe migrations."""
     Base.metadata.create_all(bind=engine)
-    _apply_sqlite_safe_migrations()
+    if is_sqlite:
+        _apply_sqlite_safe_migrations()
     Base.metadata.create_all(bind=engine)
 
 
