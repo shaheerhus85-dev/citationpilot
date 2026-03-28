@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import auth, audit, businesses, campaigns, contact, dashboard, directories, internal, manual_queue, profile, profiles, submissions, verification_inbox
 from app.config import get_settings
-from app.database import SessionLocal, init_db
+from app.database import SessionLocal, engine, init_db
 from app.services.directory_service import DirectoryService
 from app.workers.worker_manager import (
     ensure_email_poller_worker_running,
@@ -156,7 +156,13 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    try:
+        with engine.connect() as connection:
+            connection.exec_driver_sql("SELECT 1")
+        return {"status": "ok"}
+    except Exception as exc:
+        logger.exception("Health check DB ping failed: %s", exc)
+        return JSONResponse(status_code=500, content={"status": "error", "detail": "database_unreachable"})
 
 
 if __name__ == "__main__":

@@ -44,6 +44,8 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     if is_sqlite:
         _apply_sqlite_safe_migrations()
+    else:
+        _apply_postgres_safe_migrations()
     Base.metadata.create_all(bind=engine)
 
 
@@ -113,3 +115,18 @@ def _apply_sqlite_safe_migrations() -> None:
             )
 
     Base.metadata.create_all(bind=engine)
+
+
+def _apply_postgres_safe_migrations() -> None:
+    """Apply minimal non-destructive migrations required for auth on PostgreSQL."""
+    inspector = inspect(engine)
+    if "users" not in inspector.get_table_names():
+        return
+
+    # Required for signup/login verification flow.
+    _ensure_column("users", "is_verified", "BOOLEAN DEFAULT FALSE")
+    _ensure_column("users", "verification_token", "VARCHAR(255)")
+    _ensure_column("users", "verification_sent_at", "TIMESTAMP")
+    _ensure_column("users", "verification_expires_at", "TIMESTAMP")
+    _ensure_column("users", "last_login_at", "TIMESTAMP")
+    _ensure_column("users", "updated_at", "TIMESTAMP")
