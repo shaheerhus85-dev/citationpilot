@@ -232,7 +232,12 @@ def login(db: Session, email: str, password: str) -> dict[str, Any]:
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     if not user.is_verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email verification required")
+        if settings.ALLOW_SIGNUP_WITHOUT_EMAIL_VERIFICATION:
+            user.is_verified = True
+            user.verification_token = None
+            user.verification_expires_at = None
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email verification required")
 
     user.last_login_at = datetime.utcnow()
     user.updated_at = datetime.utcnow()
