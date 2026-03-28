@@ -30,7 +30,9 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await api.post('/api/v1/contact/', formData)
+      const response = await api.post('/api/v1/contact/', formData, {
+        headers: { 'x-silent-error': '1' },
+      })
       toast.success(response.data?.message || 'Email sent successfully!')
       setFormData(initialFormState)
     } catch {

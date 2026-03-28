@@ -25,12 +25,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const silentError = String(error?.config?.headers?.['x-silent-error'] || '') === '1'
     const requestUrl = String(error?.config?.url || '')
     const responseDetail = String(error?.response?.data?.detail || '')
     const isAuthRoute = requestUrl.includes('/api/v1/auth/')
 
     if (!error?.response) {
-      toast.error(`Network error while calling API (${API_BASE_URL}). Check deploy/env URL and HTTPS.`)
+      if (!silentError) {
+        toast.error('Network error while calling API. Please refresh and try again.')
+      }
       return Promise.reject(error)
     }
 
@@ -41,11 +44,13 @@ api.interceptors.response.use(
       }
     } else if (error.response?.status === 403) {
       const isVerificationBlock = responseDetail.toLowerCase().includes('email verification required')
-      if (!isAuthRoute && !isVerificationBlock) {
+      if (!silentError && !isAuthRoute && !isVerificationBlock) {
         toast.error('You do not have permission to perform this action')
       }
     } else if (error.response?.status >= 500) {
-      toast.error('Server error. Please try again later.')
+      if (!silentError) {
+        toast.error('Server error. Please try again later.')
+      }
     }
 
     return Promise.reject(error)
