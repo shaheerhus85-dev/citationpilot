@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import secrets
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
@@ -17,6 +18,7 @@ from app.services.email_service import send_verification_email
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str) -> str:
@@ -83,8 +85,12 @@ def _build_auth_payload(user: User) -> dict[str, Any]:
     }
 
 
-def signup(db: Session, email: str, password: str, full_name: str | None = None) -> User:
-    """Create a user account and send verification email."""
+def signup(db: Session, email: str, password: str, full_name: str | None = None) -> tuple[User, bool]:
+    """Create a user account and attempt to send verification email.
+
+    Returns:
+        tuple[User, bool]: user and whether email delivery succeeded.
+    """
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -110,18 +116,19 @@ def signup(db: Session, email: str, password: str, full_name: str | None = None)
         updated_at=now,
     )
     db.add(user)
-    db.flush()
-
-    verify_url = f"{settings.FRONTEND_URL}/verify-email?user_id={user.id}&token={token}"
-    try:
-        send_verification_email(user.email, user.full_name or user.username, verify_url)
-    except Exception:
-        db.rollback()
-        raise
-
     db.commit()
     db.refresh(user)
-    return user
+
+    verify_url = f"{settings.FRONTEND_URL}/verify-email?user_id={user.id}&token={token}"
+    email_sent = False
+    try:
+        send_verification_email(user.email, user.full_name or user.username, verify_url)
+        email_sent = True
+    except Exception as exc:
+        # Keep user created but report delivery failure to API caller.
+        logger.warning("Verification email delivery failed for user_id=%s: %s", user.id, exc)
+
+    return user, email_sent
 
 
 def verify_email(db: Session, user_id: int, token: str) -> dict[str, Any]:

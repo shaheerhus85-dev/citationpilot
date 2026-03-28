@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,12 +20,17 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup_endpoint(payload: SignupRequest, db: Session = Depends(get_db)):
-    user = signup(db, payload.email, payload.password, payload.full_name)
-    return {
+    user, email_sent = signup(db, payload.email, payload.password, payload.full_name)
+    content = {
         "user_id": user.id,
-        "message": "Verification email sent",
+        "message": "Verification email sent" if email_sent else "Account created. Verification email could not be delivered right now.",
+        "email_delivery": email_sent,
         "verification_expires_in_minutes": settings.EMAIL_VERIFICATION_EXPIRE_MINUTES,
     }
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED if email_sent else status.HTTP_202_ACCEPTED,
+        content=content,
+    )
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

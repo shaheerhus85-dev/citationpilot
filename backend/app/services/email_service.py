@@ -13,7 +13,7 @@ def _send_message(message: EmailMessage) -> None:
     if not settings.smtp_enabled:
         raise RuntimeError("Email service is not configured")
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5) as server:
             server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
             server.send_message(message)
     except (smtplib.SMTPException, OSError) as exc:
