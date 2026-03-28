@@ -53,20 +53,26 @@ def _build_cors_origins() -> list[str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing database...")
-    init_db()
-    logger.info("Database initialized")
-    db = SessionLocal()
     try:
-        DirectoryService.ensure_directories_seeded(db)
-    finally:
-        db.close()
+        logger.info("Initializing database...")
+        init_db()
+        logger.info("Database initialized")
+        db = SessionLocal()
+        try:
+            DirectoryService.ensure_directories_seeded(db)
+        finally:
+            db.close()
+    except Exception as exc:
+        logger.exception("Database initialization failed during startup: %s", exc)
 
     if settings.ENABLE_BACKGROUND_WORKERS:
-        ensure_submission_worker_running()
-        ensure_email_poller_worker_running()
-        ensure_email_polling_worker_running()
-        logger.info("Background worker started")
+        try:
+            ensure_submission_worker_running()
+            ensure_email_poller_worker_running()
+            ensure_email_polling_worker_running()
+            logger.info("Background worker started")
+        except Exception as exc:
+            logger.exception("Background worker startup failed: %s", exc)
     else:
         logger.info("Background workers disabled (ENABLE_BACKGROUND_WORKERS=false)")
     yield
