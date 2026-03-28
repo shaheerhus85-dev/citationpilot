@@ -61,16 +61,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Keep env-configurable origins, while guaranteeing required production/testing origins.
-required_cors_origins = [
-    "https://citationpilot.vercel.app",
-    "http://localhost:3000",
-]
-cors_origins = list(dict.fromkeys([*settings.BACKEND_CORS_ORIGINS, *required_cors_origins]))
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    # TEMP emergency CORS mode for debugging cross-origin failures.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
