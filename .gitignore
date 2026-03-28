@@ -7,6 +7,9 @@ dist/
 .venv/
 __pycache__/
 *.pyc
+backend/app.db
+backend/test_citationpilot.db
+backend/pytest-cache-files-*/
 
 # Env
 .env
@@ -17,3 +20,4 @@ __pycache__/
 
 # Logs
 *.log
+frontend/tsconfig.tsbuildinfo
