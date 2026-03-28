@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     GMAIL_USER: str | None = None
     GMAIL_APP_PASSWORD: str | None = None
     SENDGRID_API_KEY: str | None = None
+    SENDGRID_FROM_EMAIL: str | None = None
     CONTACT_RECEIVER_EMAIL: EmailStr = "shaheerhus85@gmail.com"
     EMAIL_POLL_INTERVAL_SECONDS: int = 120
     EMAIL_MAX_FETCH_PER_CYCLE: int = 40
@@ -116,6 +117,23 @@ class Settings(BaseSettings):
             return [part.strip().rstrip("/") for part in raw.split(",") if part.strip()]
 
         return []
+
+    @field_validator("GMAIL_USER", mode="before")
+    @classmethod
+    def normalize_gmail_user(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @field_validator("GMAIL_APP_PASSWORD", mode="before")
+    @classmethod
+    def normalize_gmail_password(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        # Gmail app password may be pasted with spaces.
+        text = "".join(str(value).split())
+        return text or None
 
     @model_validator(mode="after")
     def validate_required_env(self) -> "Settings":

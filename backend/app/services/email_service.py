@@ -19,6 +19,19 @@ def _send_via_gmail(message: EmailMessage) -> None:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5) as server:
             server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
             server.send_message(message)
+            return
+    except (smtplib.SMTPException, OSError):
+        pass
+
+    # Fallback path for environments where SSL handshake fails on 465.
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=8) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
+            server.send_message(message)
+            return
     except (smtplib.SMTPException, OSError) as exc:
         raise RuntimeError("Gmail email delivery failed") from exc
 
@@ -27,9 +40,13 @@ def _send_via_sendgrid(message: EmailMessage) -> None:
     if not settings.SENDGRID_API_KEY:
         raise RuntimeError("SendGrid API key is not configured")
 
+    sender = settings.SENDGRID_FROM_EMAIL or settings.GMAIL_USER
+    if not sender:
+        raise RuntimeError("SENDGRID_FROM_EMAIL or GMAIL_USER is required for SendGrid")
+
     payload: dict[str, Any] = {
         "personalizations": [{"to": [{"email": str(message.get("To"))}]}],
-        "from": {"email": str(message.get("From"))},
+        "from": {"email": sender},
         "subject": str(message.get("Subject") or ""),
         "content": [{"type": "text/plain", "value": message.get_body(preferencelist=("plain",)).get_content()}],
     }
@@ -72,7 +89,7 @@ def _send_message(message: EmailMessage) -> None:
 def send_verification_email(to_email: str, full_name: str, verification_url: str) -> None:
     message = EmailMessage()
     message["Subject"] = "Verify your CitationPilot account"
-    message["From"] = settings.GMAIL_USER or "no-reply@citationpilot.app"
+    message["From"] = settings.GMAIL_USER or settings.SENDGRID_FROM_EMAIL or "no-reply@citationpilot.app"
     message["To"] = to_email
     message.set_content(
         f"Hi {full_name},\n\nVerify your account using this link:\n{verification_url}\n\n"
@@ -99,7 +116,7 @@ def send_verification_email(to_email: str, full_name: str, verification_url: str
 def send_campaign_complete(to_email: str, campaign_name: str, stats: dict[str, object]) -> None:
     message = EmailMessage()
     message["Subject"] = f"Campaign complete: {campaign_name}"
-    message["From"] = settings.GMAIL_USER or "no-reply@citationpilot.app"
+    message["From"] = settings.GMAIL_USER or settings.SENDGRID_FROM_EMAIL or "no-reply@citationpilot.app"
     message["To"] = to_email
     message.set_content(
         f"Campaign '{campaign_name}' is complete.\n\n"
