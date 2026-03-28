@@ -153,15 +153,34 @@ def verify_email(db: Session, user_id: int, token: str) -> dict[str, Any]:
     return _build_auth_payload(user)
 
 
-def resend_verification_email(db: Session, email: str) -> bool:
+def resend_verification_email(db: Session, email: str) -> dict[str, Any]:
     """Regenerate and resend verification email for an unverified account."""
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        return {
+            "email_delivery": False,
+            "reason": "not_found",
+            "message": "If an account exists for this email, a verification message will be sent.",
+            "retry_in_seconds": 0,
+        }
     if user.is_verified:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified")
+        return {
+            "email_delivery": True,
+            "reason": "already_verified",
+            "message": "This email is already verified. You can sign in now.",
+            "retry_in_seconds": 0,
+        }
 
     now = datetime.utcnow()
+    if user.verification_sent_at and (now - user.verification_sent_at).total_seconds() < 60:
+        retry_after = int(60 - (now - user.verification_sent_at).total_seconds())
+        return {
+            "email_delivery": False,
+            "reason": "cooldown",
+            "message": "Please wait before requesting another verification email.",
+            "retry_in_seconds": max(1, retry_after),
+        }
+
     user.verification_token = create_verification_token()
     user.verification_sent_at = now
     user.verification_expires_at = now + timedelta(minutes=settings.EMAIL_VERIFICATION_EXPIRE_MINUTES)
@@ -173,10 +192,20 @@ def resend_verification_email(db: Session, email: str) -> bool:
     verify_url = f"{settings.FRONTEND_URL}/verify-email?user_id={user.id}&token={user.verification_token}"
     try:
         send_verification_email(user.email, user.full_name or user.username, verify_url)
-        return True
+        return {
+            "email_delivery": True,
+            "reason": "sent",
+            "message": "Verification email sent. Please check Inbox, Spam, and Promotions.",
+            "retry_in_seconds": 60,
+        }
     except Exception as exc:
         logger.warning("Resend verification email failed for user_id=%s: %s", user.id, exc)
-        return False
+        return {
+            "email_delivery": False,
+            "reason": "delivery_failed",
+            "message": "Could not send email right now. Please try again shortly.",
+            "retry_in_seconds": 60,
+        }
 
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:

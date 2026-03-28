@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { ActionButton, AuthScreenLoader, PageCard } from '@/components/dashboard/ui'
@@ -15,6 +16,13 @@ export default function VerifyEmailPage() {
   const login = useAuthStore((state) => state.login)
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('loading')
   const [sending, setSending] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = window.setTimeout(() => setCooldown((prev) => Math.max(0, prev - 1)), 1000)
+    return () => window.clearTimeout(timer)
+  }, [cooldown])
 
   useEffect(() => {
     const userId = params.get('user_id')
@@ -61,6 +69,9 @@ export default function VerifyEmailPage() {
       setSending(true)
       try {
         const response = await resendVerification(email)
+        if (typeof response?.retry_in_seconds === 'number' && response.retry_in_seconds > 0) {
+          setCooldown(response.retry_in_seconds)
+        }
         if (response?.email_delivery === false) {
           toast.error(response?.message || 'Could not send verification email right now')
         } else {
@@ -82,8 +93,7 @@ export default function VerifyEmailPage() {
             {email ? `We sent a verification link to ${email}.` : 'We sent a verification link to your inbox.'}
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            Open your email and click the verification link. This page will work automatically when opened from that
-            link.
+            Open your email and click the verification link. Check Inbox, Spam, and Promotions folders.
           </p>
           <div className="mt-6">
             <ActionButton
@@ -91,11 +101,19 @@ export default function VerifyEmailPage() {
               tone="secondary"
               icon={RefreshCw}
               onClick={handleResend}
-              disabled={sending || !email}
+              disabled={sending || !email || cooldown > 0}
               className="mx-auto"
             >
-              {sending ? 'Resending...' : 'Resend verification email'}
+              {sending ? 'Resending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend verification email'}
             </ActionButton>
+          </div>
+          <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+            <Link href="/login" className="text-sky-700 hover:text-sky-800">
+              Back to sign in
+            </Link>
+            <Link href="/register" className="text-slate-500 hover:text-slate-700">
+              Use different email
+            </Link>
           </div>
         </PageCard>
       </div>
@@ -113,6 +131,14 @@ export default function VerifyEmailPage() {
             ? 'Redirecting to your dashboard.'
             : 'The verification link is invalid or expired.'}
         </p>
+        {status === 'error' ? (
+          <div className="mt-6 flex items-center justify-center">
+            <Link href={`/verify-email?email=${encodeURIComponent(params.get('email') || '')}`} className="inline-flex items-center gap-2 text-sky-700 hover:text-sky-800">
+              <ArrowLeft className="h-4 w-4" />
+              Try resend verification
+            </Link>
+          </div>
+        ) : null}
       </PageCard>
     </div>
   )

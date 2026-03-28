@@ -59,12 +59,14 @@ def verify_email_endpoint(payload: VerifyEmailRequest, db: Session = Depends(get
 
 @router.post("/resend-verification")
 def resend_verification_endpoint(payload: ResendVerificationRequest, db: Session = Depends(get_db)):
-    sent = resend_verification_email(db, payload.email)
+    result = resend_verification_email(db, payload.email)
     return JSONResponse(
-        status_code=status.HTTP_200_OK if sent else status.HTTP_202_ACCEPTED,
+        status_code=status.HTTP_200_OK if result["email_delivery"] else status.HTTP_202_ACCEPTED,
         content={
-            "message": "Verification email sent" if sent else "Could not send email right now. Please try again shortly.",
-            "email_delivery": sent,
+            "message": result["message"],
+            "reason": result["reason"],
+            "email_delivery": result["email_delivery"],
+            "retry_in_seconds": result["retry_in_seconds"],
             "verification_expires_in_minutes": settings.EMAIL_VERIFICATION_EXPIRE_MINUTES,
         },
     )

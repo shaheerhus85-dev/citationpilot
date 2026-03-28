@@ -3,28 +3,76 @@ from __future__ import annotations
 import logging
 import smtplib
 from email.message import EmailMessage
+from typing import Any
+
+import requests
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-def _send_message(message: EmailMessage) -> None:
+def _send_via_gmail(message: EmailMessage) -> None:
     if not settings.smtp_enabled:
-        raise RuntimeError("Email service is not configured")
+        raise RuntimeError("Gmail SMTP is not configured")
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5) as server:
             server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
             server.send_message(message)
     except (smtplib.SMTPException, OSError) as exc:
-        logger.exception("Email delivery failed: %s", exc)
-        raise RuntimeError("Email delivery failed") from exc
+        raise RuntimeError("Gmail email delivery failed") from exc
+
+
+def _send_via_sendgrid(message: EmailMessage) -> None:
+    if not settings.SENDGRID_API_KEY:
+        raise RuntimeError("SendGrid API key is not configured")
+
+    payload: dict[str, Any] = {
+        "personalizations": [{"to": [{"email": str(message.get("To"))}]}],
+        "from": {"email": str(message.get("From"))},
+        "subject": str(message.get("Subject") or ""),
+        "content": [{"type": "text/plain", "value": message.get_body(preferencelist=("plain",)).get_content()}],
+    }
+    html_part = message.get_body(preferencelist=("html",))
+    if html_part:
+        payload["content"].append({"type": "text/html", "value": html_part.get_content()})
+
+    response = requests.post(
+        "https://api.sendgrid.com/v3/mail/send",
+        headers={
+            "Authorization": f"Bearer {settings.SENDGRID_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=8,
+    )
+    if response.status_code >= 300:
+        raise RuntimeError(f"SendGrid delivery failed: {response.status_code}")
+
+
+def _send_message(message: EmailMessage) -> None:
+    errors: list[str] = []
+    try:
+        _send_via_gmail(message)
+        return
+    except Exception as exc:
+        logger.warning("Gmail delivery attempt failed: %s", exc)
+        errors.append(str(exc))
+
+    try:
+        _send_via_sendgrid(message)
+        return
+    except Exception as exc:
+        logger.warning("SendGrid delivery attempt failed: %s", exc)
+        errors.append(str(exc))
+
+    raise RuntimeError("Email delivery failed via all configured providers")
 
 
 def send_verification_email(to_email: str, full_name: str, verification_url: str) -> None:
     message = EmailMessage()
     message["Subject"] = "Verify your CitationPilot account"
-    message["From"] = settings.GMAIL_USER
+    message["From"] = settings.GMAIL_USER or "no-reply@citationpilot.app"
     message["To"] = to_email
     message.set_content(
         f"Hi {full_name},\n\nVerify your account using this link:\n{verification_url}\n\n"
@@ -51,7 +99,7 @@ def send_verification_email(to_email: str, full_name: str, verification_url: str
 def send_campaign_complete(to_email: str, campaign_name: str, stats: dict[str, object]) -> None:
     message = EmailMessage()
     message["Subject"] = f"Campaign complete: {campaign_name}"
-    message["From"] = settings.GMAIL_USER
+    message["From"] = settings.GMAIL_USER or "no-reply@citationpilot.app"
     message["To"] = to_email
     message.set_content(
         f"Campaign '{campaign_name}' is complete.\n\n"
