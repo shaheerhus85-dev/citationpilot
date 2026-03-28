@@ -29,15 +29,26 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup_endpoint(payload: SignupRequest, db: Session = Depends(get_db)):
-    user, email_sent = signup(db, payload.email, payload.password, payload.full_name)
+    user, email_sent, auth_payload = signup(db, payload.email, payload.password, payload.full_name)
     content = {
         "user_id": user.id,
         "message": "Verification email sent" if email_sent else "Account created. Verification email could not be delivered right now.",
         "email_delivery": email_sent,
         "verification_expires_in_minutes": settings.EMAIL_VERIFICATION_EXPIRE_MINUTES,
     }
+    if auth_payload:
+        content.update(
+            {
+                "message": "Account created and activated. Email delivery is temporarily unavailable.",
+                "access_token": auth_payload["access_token"],
+                "refresh_token": auth_payload["refresh_token"],
+                "token_type": auth_payload["token_type"],
+                "user": UserResponse.model_validate(auth_payload["user"]).model_dump(mode="json"),
+                "auto_verified": True,
+            }
+        )
     return JSONResponse(
-        status_code=status.HTTP_201_CREATED if email_sent else status.HTTP_202_ACCEPTED,
+        status_code=status.HTTP_201_CREATED if email_sent or auth_payload else status.HTTP_202_ACCEPTED,
         content=content,
     )
 

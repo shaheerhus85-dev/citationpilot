@@ -85,11 +85,11 @@ def _build_auth_payload(user: User) -> dict[str, Any]:
     }
 
 
-def signup(db: Session, email: str, password: str, full_name: str | None = None) -> tuple[User, bool]:
+def signup(db: Session, email: str, password: str, full_name: str | None = None) -> tuple[User, bool, dict[str, Any] | None]:
     """Create a user account and attempt to send verification email.
 
     Returns:
-        tuple[User, bool]: user and whether email delivery succeeded.
+        tuple[User, bool, dict | None]: user, email delivery flag, and optional auth payload when auto-verified.
     """
     existing = db.query(User).filter(User.email == email).first()
     if existing:
@@ -121,14 +121,24 @@ def signup(db: Session, email: str, password: str, full_name: str | None = None)
 
     verify_url = f"{settings.FRONTEND_URL}/verify-email?user_id={user.id}&token={token}"
     email_sent = False
+    auth_payload: dict[str, Any] | None = None
     try:
         send_verification_email(user.email, user.full_name or user.username, verify_url)
         email_sent = True
     except Exception as exc:
         # Keep user created but report delivery failure to API caller.
         logger.warning("Verification email delivery failed for user_id=%s: %s", user.id, exc)
+        if settings.ALLOW_SIGNUP_WITHOUT_EMAIL_VERIFICATION:
+            user.is_verified = True
+            user.verification_token = None
+            user.verification_expires_at = None
+            user.updated_at = datetime.utcnow()
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            auth_payload = _build_auth_payload(user)
 
-    return user, email_sent
+    return user, email_sent, auth_payload
 
 
 def verify_email(db: Session, user_id: int, token: str) -> dict[str, Any]:
