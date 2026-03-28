@@ -77,8 +77,8 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <FormInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
-        <FormInput label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+        <FormInput label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+        <FormInput label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
         <ActionButton type="submit" disabled={loading} tone="primary" icon={ArrowRight} className="w-full">
           {loading ? 'Signing in...' : 'Sign In'}
         </ActionButton>

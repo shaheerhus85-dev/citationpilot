@@ -69,9 +69,9 @@ export default function RegisterPage() {
         <p className="mt-2 text-slate-500">Set up your citation workspace.</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <FormInput label="Full Name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} disabled={loading} />
-          <FormInput label="Email" type="email" name="email" value={formData.email} onChange={handleChange} required disabled={loading} />
-          <FormInput label="Password" type="password" name="password" value={formData.password} onChange={handleChange} required disabled={loading} />
+          <FormInput label="Full Name" type="text" name="full_name" autoComplete="name" value={formData.full_name} onChange={handleChange} disabled={loading} />
+          <FormInput label="Email" type="email" name="email" autoComplete="email" value={formData.email} onChange={handleChange} required disabled={loading} />
+          <FormInput label="Password" type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleChange} required disabled={loading} />
 
           <ActionButton type="submit" disabled={loading} tone="primary" icon={ArrowRight} className="w-full">
             {loading ? 'Creating account...' : 'Create Account'}

@@ -13,6 +13,11 @@ const appFont = Manrope({
 export const metadata: Metadata = {
   title: 'CitationPilot',
   description: 'Local SEO citation automation SaaS with campaign tracking, manual queue workflows, and verification support.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
