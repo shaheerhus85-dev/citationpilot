@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=your-secret-key-change-in-production
+      - DATABASE_URL=sqlite:///./app.db
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./backend:/app
+    command: python run.py
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    command: npm run dev
