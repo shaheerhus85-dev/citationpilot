@@ -83,14 +83,20 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_build_cors_origins(),
+    allow_origin_regex=r"https://([a-zA-Z0-9-]+\.)?vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info("CORS allowlist loaded: %s", _build_cors_origins())
 
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    # Let CORS preflight pass through without auth/rate-limit side effects.
+    if request.method.upper() == "OPTIONS":
+        return await call_next(request)
+
     if settings.RATE_LIMIT_ENABLED:
         ip = request.client.host if request.client else "unknown"
         key = f"{ip}:{request.url.path}"

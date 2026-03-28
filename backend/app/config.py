@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 from functools import lru_cache
 from typing import List
 
@@ -92,6 +93,29 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return value.strip().lower() in {"1", "true", "yes", "on"}
         return bool(value)
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def normalize_cors_origins(cls, value: object) -> List[str]:
+        """Support JSON array or comma-separated CORS origins from env."""
+        if isinstance(value, list):
+            origins = [str(v).strip().rstrip("/") for v in value if str(v).strip()]
+            return origins
+
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return []
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(v).strip().rstrip("/") for v in parsed if str(v).strip()]
+                except json.JSONDecodeError:
+                    pass
+            return [part.strip().rstrip("/") for part in raw.split(",") if part.strip()]
+
+        return []
 
     @model_validator(mode="after")
     def validate_required_env(self) -> "Settings":
