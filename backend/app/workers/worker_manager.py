@@ -4,10 +4,6 @@ from __future__ import annotations
 import logging
 import threading
 
-from app.workers.email_poller_worker import run_worker_sync as run_email_worker_sync
-from app.workers.email_polling_worker import run_worker_sync as run_temp_email_worker_sync
-from app.workers.submission_worker import run_worker_sync
-
 logger = logging.getLogger(__name__)
 
 _worker_thread: threading.Thread | None = None
@@ -30,6 +26,8 @@ def ensure_submission_worker_running() -> bool:
         if _worker_thread and _worker_thread.is_alive():
             return False
 
+        from app.workers.submission_worker import run_worker_sync
+
         _worker_thread = threading.Thread(
             target=run_worker_sync,
             name="submission-worker",
@@ -48,6 +46,8 @@ def ensure_email_poller_worker_running() -> bool:
         if _email_worker_thread and _email_worker_thread.is_alive():
             return False
 
+        from app.workers.email_poller_worker import run_worker_sync as run_email_worker_sync
+
         _email_worker_thread = threading.Thread(
             target=run_email_worker_sync,
             name="email-poller-worker",
@@ -65,6 +65,8 @@ def ensure_email_polling_worker_running() -> bool:
     with _worker_lock:
         if _temp_email_worker_thread and _temp_email_worker_thread.is_alive():
             return False
+
+        from app.workers.email_polling_worker import run_worker_sync as run_temp_email_worker_sync
 
         _temp_email_worker_thread = threading.Thread(
             target=run_temp_email_worker_sync,
