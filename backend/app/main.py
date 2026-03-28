@@ -32,6 +32,25 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 settings = get_settings()
 
 
+def _build_cors_origins() -> list[str]:
+    """Build a clean, de-duplicated CORS allowlist."""
+    default_origins = {
+        "https://citationpilot.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    }
+    configured = set(settings.BACKEND_CORS_ORIGINS or [])
+    if settings.FRONTEND_URL:
+        configured.add(settings.FRONTEND_URL)
+
+    normalized: list[str] = []
+    for origin in default_origins | configured:
+        cleaned = str(origin).strip().rstrip("/")
+        if cleaned and cleaned not in normalized:
+            normalized.append(cleaned)
+    return normalized
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Initializing database...")
@@ -63,8 +82,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    # TEMP emergency CORS mode for debugging cross-origin failures.
-    allow_origins=["*"],
+    allow_origins=_build_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
