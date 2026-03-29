@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends
@@ -14,6 +15,7 @@ from app.services.auth_service import get_current_active_user
 from app.services.submission_service import SubmissionService
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
+logger = logging.getLogger(__name__)
 
 _SNAPSHOT_CACHE: dict[int, tuple[datetime, dict[str, Any]]] = {}
 
@@ -43,18 +45,31 @@ def get_dashboard_snapshot(
     if cached:
         return DashboardSnapshotResponse(**cached)
 
-    overview = SubmissionService.get_dashboard_overview(db, user_id)
-    latest_campaign = overview["recent_campaigns"][0] if overview["recent_campaigns"] else None
-    payload = {
-        "total_campaigns": overview["stats"]["total_campaigns"],
-        "total_submissions": overview["stats"]["total_submissions"],
-        "success": overview["stats"]["success_count"],
-        "pending": overview["stats"]["pending_count"],
-        "in_progress": overview["stats"]["in_progress_count"],
-        "failed": overview["stats"]["failed_count"],
-        "manual_required": overview["stats"]["manual_required"],
-        "latest_campaign": latest_campaign,
-    }
+    try:
+        overview = SubmissionService.get_dashboard_overview(db, user_id)
+        latest_campaign = overview["recent_campaigns"][0] if overview["recent_campaigns"] else None
+        payload = {
+            "total_campaigns": overview["stats"]["total_campaigns"],
+            "total_submissions": overview["stats"]["total_submissions"],
+            "success": overview["stats"]["success_count"],
+            "pending": overview["stats"]["pending_count"],
+            "in_progress": overview["stats"]["in_progress_count"],
+            "failed": overview["stats"]["failed_count"],
+            "manual_required": overview["stats"]["manual_required"],
+            "latest_campaign": latest_campaign,
+        }
+    except Exception as exc:  # defensive fallback for production resilience
+        logger.exception("Dashboard snapshot failed for user_id=%s: %s", user_id, exc)
+        payload = {
+            "total_campaigns": 0,
+            "total_submissions": 0,
+            "success": 0,
+            "pending": 0,
+            "in_progress": 0,
+            "failed": 0,
+            "manual_required": 0,
+            "latest_campaign": None,
+        }
     _set_cached_snapshot(user_id, payload)
     return DashboardSnapshotResponse(**payload)
 
@@ -64,4 +79,24 @@ def get_dashboard_overview(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return DashboardOverview(**SubmissionService.get_dashboard_overview(db, cast(int, current_user.id)))
+    user_id = cast(int, current_user.id)
+    try:
+        return DashboardOverview(**SubmissionService.get_dashboard_overview(db, user_id))
+    except Exception as exc:  # defensive fallback for production resilience
+        logger.exception("Dashboard overview failed for user_id=%s: %s", user_id, exc)
+        return DashboardOverview(
+            stats={
+                "total_campaigns": 0,
+                "total_submissions": 0,
+                "success_count": 0,
+                "pending_count": 0,
+                "in_progress_count": 0,
+                "failed_count": 0,
+                "manual_required": 0,
+                "business_profiles_count": 0,
+                "success_rate": 0.0,
+            },
+            recent_campaigns=[],
+            recent_activity=[],
+            recent_attempts=[],
+        )

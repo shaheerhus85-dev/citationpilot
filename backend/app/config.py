@@ -32,6 +32,9 @@ class Settings(BaseSettings):
 
     GMAIL_USER: str | None = None
     GMAIL_APP_PASSWORD: str | None = None
+    BREVO_API_KEY: str | None = None
+    BREVO_SENDER_EMAIL: str | None = None
+    BREVO_SENDER_NAME: str | None = "CitationPilot"
     SENDGRID_API_KEY: str | None = None
     SENDGRID_FROM_EMAIL: str | None = None
     CONTACT_RECEIVER_EMAIL: EmailStr = "shaheerhus85@gmail.com"
@@ -143,6 +146,9 @@ class Settings(BaseSettings):
         if bool(self.GMAIL_USER) ^ bool(self.GMAIL_APP_PASSWORD):
             raise ValueError("Both GMAIL_USER and GMAIL_APP_PASSWORD must be set together")
 
+        if self.BREVO_API_KEY and not self.BREVO_SENDER_EMAIL:
+            raise ValueError("BREVO_SENDER_EMAIL is required when BREVO_API_KEY is set")
+
         if self.STRICT_ENV_VALIDATION or self.ENVIRONMENT.lower() == "production":
             required = {
                 "DATABASE_URL": self.DATABASE_URL,
@@ -152,15 +158,27 @@ class Settings(BaseSettings):
             if missing:
                 raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
 
-        if not self.smtp_enabled:
+        if not self.email_delivery_enabled:
             logger.warning(
-                "SMTP disabled: set GMAIL_USER and GMAIL_APP_PASSWORD to enable contact/verification email delivery."
+                "Email delivery is disabled: configure Gmail SMTP, Brevo, or SendGrid credentials."
             )
         return self
 
     @property
     def smtp_enabled(self) -> bool:
         return bool(self.GMAIL_USER and self.GMAIL_APP_PASSWORD)
+
+    @property
+    def brevo_enabled(self) -> bool:
+        return bool(self.BREVO_API_KEY and self.BREVO_SENDER_EMAIL)
+
+    @property
+    def sendgrid_enabled(self) -> bool:
+        return bool(self.SENDGRID_API_KEY and (self.SENDGRID_FROM_EMAIL or self.GMAIL_USER))
+
+    @property
+    def email_delivery_enabled(self) -> bool:
+        return bool(self.smtp_enabled or self.brevo_enabled or self.sendgrid_enabled)
 
 
 @lru_cache

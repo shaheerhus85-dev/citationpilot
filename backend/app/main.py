@@ -32,7 +32,8 @@ _RATE_LIMIT_LOCK = Lock()
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 settings = get_settings()
 ENABLE_WORKERS = os.getenv("ENABLE_BACKGROUND_WORKERS", "false").strip().lower() == "true"
-INIT_DB_ON_STARTUP = os.getenv("INIT_DB_ON_STARTUP", "false").strip().lower() == "true"
+# Keep startup self-healing in production unless explicitly disabled.
+INIT_DB_ON_STARTUP = os.getenv("INIT_DB_ON_STARTUP", "true").strip().lower() == "true"
 
 
 def _build_cors_origins() -> list[str]:

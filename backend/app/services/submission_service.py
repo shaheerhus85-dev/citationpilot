@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.models import (
@@ -429,16 +430,23 @@ class SubmissionService(BaseService):
             .limit(10)
             .all(),
         )
-        recent_attempts = cast(
-            list[SubmissionAttemptLog],
-            db.query(SubmissionAttemptLog)
-            .join(DirectorySubmission, SubmissionAttemptLog.directory_submission_id == DirectorySubmission.id)
-            .join(SubmissionRequest, DirectorySubmission.submission_request_id == SubmissionRequest.id)
-            .filter(SubmissionRequest.user_id == user_id)
-            .order_by(SubmissionAttemptLog.created_at.desc())
-            .limit(20)
-            .all(),
-        )
+
+        # Keep dashboard healthy even if attempt-log migration has not run yet.
+        try:
+            recent_attempts = cast(
+                list[SubmissionAttemptLog],
+                db.query(SubmissionAttemptLog)
+                .join(DirectorySubmission, SubmissionAttemptLog.directory_submission_id == DirectorySubmission.id)
+                .join(SubmissionRequest, DirectorySubmission.submission_request_id == SubmissionRequest.id)
+                .filter(SubmissionRequest.user_id == user_id)
+                .order_by(SubmissionAttemptLog.created_at.desc())
+                .limit(20)
+                .all(),
+            )
+        except SQLAlchemyError as exc:
+            logger.warning("Dashboard attempts query failed, returning empty attempts list: %s", exc)
+            db.rollback()
+            recent_attempts = []
 
         return {
             "stats": stats,
