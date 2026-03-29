@@ -34,7 +34,7 @@ export default function VerificationInboxPage() {
 
   async function fetchRows() {
     try {
-      const response = await fetch(buildApiUrl('/api/v1/verification-inbox/'), {
+      const response = await fetch(buildApiUrl('/verification-inbox/'), {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       })
       if (!response.ok) throw new Error('Failed to load verification inbox')
@@ -50,7 +50,7 @@ export default function VerificationInboxPage() {
   async function verifyNow(emailId: number) {
     setBusyId(emailId)
     try {
-      const response = await fetch(buildApiUrl(`/api/v1/verification-inbox/${emailId}/verify-now`), {
+      const response = await fetch(buildApiUrl(`/verification-inbox/${emailId}/verify-now`), {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       })

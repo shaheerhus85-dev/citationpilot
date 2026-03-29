@@ -56,7 +56,7 @@ export default function SubmissionDetailPage() {
 
   const loadDetails = () => {
     api
-      .get(`/api/v1/campaigns/${campaignId}/details`)
+      .get(`/campaigns/${campaignId}/details`)
       .then((response) => setDetails(response.data))
       .catch(() => toast.error('Failed to load campaign details'))
       .finally(() => setLoading(false))

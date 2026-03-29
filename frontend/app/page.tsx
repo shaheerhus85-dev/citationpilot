@@ -49,7 +49,7 @@ export default function Home() {
     if (!hydrated || !isAuthenticated) return
     setLoading(true)
     api
-      .get('/api/v1/dashboard/snapshot')
+      .get('/dashboard/snapshot')
       .then((response) => setSnapshot(response.data))
       .catch(() => setSnapshot(null))
       .finally(() => setLoading(false))

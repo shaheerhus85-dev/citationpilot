@@ -26,7 +26,7 @@ export function clearAuthToken() {
 }
 
 export async function signup(email: string, password: string, fullName: string) {
-  const { data } = await api.post('/api/v1/auth/signup', {
+  const { data } = await api.post('/auth/signup', {
     email,
     password,
     full_name: fullName,
@@ -35,13 +35,13 @@ export async function signup(email: string, password: string, fullName: string) 
 }
 
 export async function login(email: string, password: string) {
-  const { data } = await api.post('/api/v1/auth/login', { email, password })
+  const { data } = await api.post('/auth/login', { email, password })
   setAuthToken(data.access_token, data.refresh_token, data.user)
   return data
 }
 
 export async function verifyEmail(userId: string, token: string) {
-  const { data } = await api.post('/api/v1/auth/verify-email', {
+  const { data } = await api.post('/auth/verify-email', {
     user_id: Number(userId),
     token,
   })
@@ -50,7 +50,7 @@ export async function verifyEmail(userId: string, token: string) {
 }
 
 export async function resendVerification(email: string) {
-  const { data } = await api.post('/api/v1/auth/resend-verification', { email })
+  const { data } = await api.post('/auth/resend-verification', { email })
   return data
 }
 

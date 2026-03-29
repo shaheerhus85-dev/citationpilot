@@ -41,7 +41,7 @@ export function DirectorySelector({
     if (country) params.set('country', country)
 
     api
-      .get(`/api/v1/directories/recommended?${params.toString()}`)
+      .get(`/directories/recommended?${params.toString()}`)
       .then((response) => {
         if (!cancelled) setDirectories(response.data)
       })

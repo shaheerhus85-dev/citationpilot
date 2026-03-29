@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!hydrated || !isAuthenticated) return
     api
-      .get('/api/v1/dashboard/overview')
+      .get('/dashboard/overview')
       .then((response) => setData(response.data))
       .catch(() => toast.error('Failed to load analytics'))
       .finally(() => setLoading(false))

@@ -36,7 +36,7 @@ export default function AuditPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const response = await fetch(buildApiUrl('/api/v1/audit/run'), {
+      const response = await fetch(buildApiUrl('/audit/run'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

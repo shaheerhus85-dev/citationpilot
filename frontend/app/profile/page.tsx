@@ -31,7 +31,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!hydrated || !isAuthenticated) return
     api
-      .get('/api/v1/profile/')
+      .get('/profile/')
       .then((response) => {
         setProfile(response.data)
         setName(response.data.name)
@@ -44,7 +44,7 @@ export default function ProfilePage() {
     event.preventDefault()
     setSavingProfile(true)
     try {
-      const response = await api.put('/api/v1/profile/', { name })
+      const response = await api.put('/profile/', { name })
       setProfile(response.data)
       toast.success('Profile updated successfully')
     } catch (error: any) {
@@ -58,7 +58,7 @@ export default function ProfilePage() {
     event.preventDefault()
     setSavingPassword(true)
     try {
-      const response = await api.post('/api/v1/profile/change-password', passwords)
+      const response = await api.post('/profile/change-password', passwords)
       setPasswords({ current_password: '', new_password: '', confirm_password: '' })
       toast.success(response.data?.message || 'Password changed successfully')
     } catch (error: any) {

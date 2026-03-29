@@ -31,8 +31,8 @@ export default function ManualQueuePage() {
   async function loadQueue() {
     try {
       const [{ data: queueData }, { data: statsData }] = await Promise.all([
-        api.get('/api/v1/submissions/manual-queue'),
-        api.get('/api/v1/submissions/manual-queue/stats'),
+        api.get('/submissions/manual-queue'),
+        api.get('/submissions/manual-queue/stats'),
       ])
       setQueue(queueData)
       setStats(statsData)

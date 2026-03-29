@@ -52,7 +52,7 @@ export function ManualSubmissionCard({
 
   async function generateTempEmail() {
     try {
-      const { data } = await api.get(`/api/v1/submissions/${submission.id}/temp-email`)
+      const { data } = await api.get(`/submissions/${submission.id}/temp-email`)
       setTempEmail(data)
       toast.success('Temporary inbox created')
     } catch (error: any) {
@@ -63,7 +63,7 @@ export function ManualSubmissionCard({
   async function markComplete(success: boolean) {
     setLoading(true)
     try {
-      await api.post(`/api/v1/submissions/${submission.id}/mark-complete`, {
+      await api.post(`/submissions/${submission.id}/mark-complete`, {
         success,
         operator_notes: notes || null,
       })

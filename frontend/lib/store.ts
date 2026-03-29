@@ -98,7 +98,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     if (accessToken) {
       try {
-        const { data: user } = await api.get('/api/v1/auth/me')
+        const { data: user } = await api.get('/auth/me')
         persistAuth(accessToken, refreshToken || '', user)
         set({
           user,

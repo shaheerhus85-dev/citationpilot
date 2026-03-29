@@ -33,7 +33,7 @@ export default function CampaignCreatePage() {
   useEffect(() => {
     if (!hydrated || !isAuthenticated) return
     api
-      .get('/api/v1/businesses')
+      .get('/businesses')
       .then((response) => {
         setBusinesses(response.data)
         if (!selectedBusinessId && response.data.length > 0) {
@@ -69,7 +69,7 @@ export default function CampaignCreatePage() {
 
     setSubmitting(true)
     try {
-      const response = await api.post('/api/v1/campaigns', {
+      const response = await api.post('/campaigns', {
         business_profile_id: Number(selectedBusinessId),
         directory_ids: selectedIds,
         campaign_name: campaignName || undefined,

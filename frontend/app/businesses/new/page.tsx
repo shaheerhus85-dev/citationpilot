@@ -39,7 +39,7 @@ export default function BusinessFormPage() {
   useEffect(() => {
     if (!editId || !hydrated || !isAuthenticated) return
     api
-      .get(`/api/v1/businesses/${editId}`)
+      .get(`/businesses/${editId}`)
       .then((response) => {
         const payload = response.data
         setForm({
@@ -67,10 +67,10 @@ export default function BusinessFormPage() {
     setSubmitting(true)
     try {
       if (isEditing) {
-        await api.put(`/api/v1/businesses/${editId}`, form)
+        await api.put(`/businesses/${editId}`, form)
         toast.success('Business updated successfully')
       } else {
-        await api.post('/api/v1/businesses', form)
+        await api.post('/businesses', form)
         toast.success('Business created successfully')
       }
       router.push('/businesses')

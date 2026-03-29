@@ -31,7 +31,7 @@ export default function BusinessesPage() {
 
   async function loadBusinesses() {
     try {
-      const response = await api.get('/api/v1/businesses')
+      const response = await api.get('/businesses')
       setRows(response.data)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load businesses')
@@ -49,7 +49,7 @@ export default function BusinessesPage() {
   async function handleDelete(businessId: number) {
     if (!window.confirm('Delete this business profile?')) return
     try {
-      await api.delete(`/api/v1/businesses/${businessId}`)
+      await api.delete(`/businesses/${businessId}`)
       setRows((current) => current.filter((row) => row.id !== businessId))
       toast.success('Business deleted')
     } catch (error) {

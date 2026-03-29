@@ -33,7 +33,7 @@ export default function SubmissionsPage() {
 
   async function fetchSubmissions() {
     try {
-      const response = await api.get('/api/v1/campaigns')
+      const response = await api.get('/campaigns')
       setSubmissions(response.data)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load campaigns')

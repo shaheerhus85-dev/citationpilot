@@ -84,7 +84,7 @@ export default function DashboardPage() {
     let cancelled = false
     const load = async (silent = false) => {
       try {
-        const response = await api.get('/api/v1/dashboard/overview')
+        const response = await api.get('/dashboard/overview')
         if (!cancelled) setData(response.data)
       } catch {
         if (!silent) toast.error('Failed to load dashboard data')
