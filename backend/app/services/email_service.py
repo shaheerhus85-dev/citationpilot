@@ -128,6 +128,11 @@ def _send_message(message: EmailMessage) -> None:
     raise RuntimeError(f"Email delivery failed via all configured providers: {' | '.join(errors)}")
 
 
+def send_email_message(message: EmailMessage) -> None:
+    """Public wrapper so other services can reuse provider fallback chain."""
+    _send_message(message)
+
+
 def send_verification_email(to_email: str, full_name: str, verification_url: str) -> None:
     message = EmailMessage()
     message["Subject"] = "Verify your CitationPilot account"

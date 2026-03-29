@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useAuthStore } from '@/lib/store'
 
@@ -31,6 +31,15 @@ export function Sidebar() {
   const logout = useAuthStore((state) => state.logout)
   const [open, setOpen] = useState(false)
 
+  useEffect(() => {
+    if (!open) return
+    const onResize = () => {
+      if (window.innerWidth >= 768) setOpen(false)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [open])
+
   const handleLogout = () => {
     logout()
     router.push('/login')
@@ -45,7 +54,7 @@ export function Sidebar() {
         </Link>
         <button
           type="button"
-          className="hidden rounded-xl border border-slate-200 p-2 text-slate-500 lg:inline-flex"
+          className="hidden rounded-xl border border-slate-200 p-2 text-slate-500 md:inline-flex"
           onClick={() => setOpen(false)}
           aria-label="Collapse sidebar"
         >
@@ -82,7 +91,7 @@ export function Sidebar() {
 
   return (
     <>
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur md:hidden">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/dashboard" className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
             Local SEO Citation
@@ -98,10 +107,10 @@ export function Sidebar() {
         </div>
       </div>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] lg:block">{content}</aside>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] md:block">{content}</aside>
 
       {open ? (
-        <div className="fixed inset-0 z-40 bg-slate-950/30 lg:hidden" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-40 bg-slate-950/30 md:hidden" onClick={() => setOpen(false)}>
           <div className="h-full w-[240px]" onClick={(event) => event.stopPropagation()}>
             {content}
           </div>

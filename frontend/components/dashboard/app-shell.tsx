@@ -16,7 +16,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fbff_0%,#f5f7fb_42%,#eef2f7_100%)] text-slate-900">
       <Sidebar />
-      <div className="min-h-screen lg:pl-[240px]">
+      <div className="min-h-screen md:pl-[240px]">
         <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
           <section className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">

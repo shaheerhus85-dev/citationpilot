@@ -29,6 +29,21 @@ export default function Navbar() {
   ]
 
   const links = hydrated && isAuthenticated ? authLinks : guestLinks
+  const appShellPaths = [
+    '/dashboard',
+    '/businesses',
+    '/campaigns',
+    '/manual-queue',
+    '/verification-inbox',
+    '/analytics',
+    '/profile',
+    '/submissions',
+  ]
+  const hideOnAppShell = appShellPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+
+  if (hideOnAppShell) {
+    return null
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">

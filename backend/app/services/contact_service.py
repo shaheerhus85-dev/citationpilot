@@ -1,5 +1,4 @@
 import logging
-import smtplib
 from email.message import EmailMessage
 
 from sqlalchemy.orm import Session
@@ -7,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.models import ContactMessage
 from app.schemas.schemas import ContactCreate
+from app.services.email_service import send_email_message
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,18 @@ def create_contact_message(db: Session, payload: ContactCreate) -> ContactMessag
 
 
 def send_contact_email(payload: ContactCreate) -> None:
-    if not settings.GMAIL_USER or not settings.GMAIL_APP_PASSWORD:
+    if not settings.email_delivery_enabled:
         raise RuntimeError("Email service is not configured")
 
     message = EmailMessage()
     message["Subject"] = f"[Contact] {payload.subject}"
-    message["From"] = settings.GMAIL_USER
-    message["To"] = "shaheerhus85@gmail.com"
+    message["From"] = (
+        settings.GMAIL_USER
+        or settings.BREVO_SENDER_EMAIL
+        or settings.SENDGRID_FROM_EMAIL
+        or "no-reply@citationpilot.app"
+    )
+    message["To"] = str(settings.CONTACT_RECEIVER_EMAIL)
     message["Reply-To"] = payload.email
     message.set_content(
         f"Name: {payload.name}\n"
@@ -41,9 +46,7 @@ def send_contact_email(payload: ContactCreate) -> None:
     )
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as server:
-            server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
-            server.send_message(message)
-    except (smtplib.SMTPException, OSError) as exc:
+        send_email_message(message)
+    except Exception as exc:
         logger.exception("Contact email delivery failed: %s", exc)
         raise RuntimeError("Email delivery failed") from exc

@@ -1,14 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Manrope } from 'next/font/google'
 import Navbar from '@/components/Navbar'
 import { Providers } from './providers'
-
-const appFont = Manrope({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-app',
-})
 
 export const metadata: Metadata = {
   title: 'CitationPilot',
@@ -27,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${appFont.variable} bg-[#f8fafc] font-sans text-slate-900`}>
+      <body className="bg-[#f8fafc] font-sans text-slate-900">
         <Providers>
           <Navbar />
           {children}
