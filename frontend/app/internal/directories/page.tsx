@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, InfoBadge, PageCard } from '@/components/dashboard/ui'
-import { API_BASE_URL } from '@/lib/env'
+import { buildApiUrl } from '@/lib/env'
 
 type DirectoryItem = {
   id: number
@@ -25,7 +25,7 @@ export default function InternalDirectoriesPage() {
 
   async function loadDirectories() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/internal/directories`)
+      const response = await fetch(buildApiUrl('/api/v1/internal/directories'))
       if (!response.ok) throw new Error('Could not load internal directories')
       setDirectories(await response.json())
     } catch (error) {
@@ -37,7 +37,7 @@ export default function InternalDirectoriesPage() {
 
   async function updateTier(id: number, tier: string) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/internal/directories/${id}`, {
+      const response = await fetch(buildApiUrl(`/api/v1/internal/directories/${id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tier }),
@@ -51,7 +51,7 @@ export default function InternalDirectoriesPage() {
 
   async function runValidation() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/internal/directories/quarterly-validate?limit=25`, {
+      const response = await fetch(buildApiUrl('/api/v1/internal/directories/quarterly-validate?limit=25'), {
         method: 'POST',
       })
       if (!response.ok) throw new Error('Validation worker fail')

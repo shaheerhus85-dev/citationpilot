@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, CardHeader, EmptyState, FormInput, InfoBadge, PageCard, ProtectedRoute } from '@/components/dashboard/ui'
-import { API_BASE_URL } from '@/lib/env'
+import { buildApiUrl } from '@/lib/env'
 import { useAuthStore } from '@/lib/store'
 
 type AuditResponse = {
@@ -36,7 +36,7 @@ export default function AuditPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/audit/run`, {
+      const response = await fetch(buildApiUrl('/api/v1/audit/run'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

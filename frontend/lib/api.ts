@@ -1,11 +1,11 @@
 import axios, { AxiosInstance } from 'axios'
 import toast from 'react-hot-toast'
 
-import { API_BASE_URL } from '@/lib/env'
+import { API_ROOT } from '@/lib/env'
 import { useAuthStore } from '@/lib/store'
 
 export const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_ROOT,
   headers: {
     'Content-Type': 'application/json',
   },

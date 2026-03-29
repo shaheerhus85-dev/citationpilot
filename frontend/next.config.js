@@ -12,7 +12,7 @@ function normalizeApiOrigin(raw) {
   return value;
 }
 
-const API_ORIGIN = normalizeApiOrigin(process.env.NEXT_PUBLIC_API_URL);
+const API_ORIGIN = normalizeApiOrigin(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL);
 
 const nextConfig = {
   reactStrictMode: true,
@@ -25,6 +25,7 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   env: {
+    NEXT_PUBLIC_API_BASE_URL: API_ORIGIN,
     NEXT_PUBLIC_API_URL: API_ORIGIN,
     NEXT_PUBLIC_API_BASE_PATH:
       process.env.NEXT_PUBLIC_API_BASE_PATH || "/backend",
