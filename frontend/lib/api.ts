@@ -1,17 +1,19 @@
 import axios, { AxiosInstance } from 'axios'
 import toast from 'react-hot-toast'
 
-import { API_BASE_URL } from '@/lib/env'
+import { API_V1_BASE_URL, toApiV1Path } from '@/lib/env'
 import { useAuthStore } from '@/lib/store'
 
 export const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_V1_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
 api.interceptors.request.use((config) => {
+  config.url = toApiV1Path(String(config.url || '/'))
+
   if (typeof window !== 'undefined') {
     const token = useAuthStore.getState().accessToken
     if (token) {
@@ -28,7 +30,7 @@ api.interceptors.response.use(
     const silentError = String(error?.config?.headers?.['x-silent-error'] || '') === '1'
     const requestUrl = String(error?.config?.url || '')
     const responseDetail = String(error?.response?.data?.detail || '')
-    const isAuthRoute = requestUrl.includes('/api/v1/auth/')
+    const isAuthRoute = requestUrl.startsWith('/auth/')
 
     if (!error?.response) {
       if (!silentError) {
