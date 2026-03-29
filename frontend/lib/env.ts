@@ -1,5 +1,7 @@
 const DEFAULT_API_BASE_URL = 'https://citationpilot-production.up.railway.app'
-const API_V1_PREFIX = '/api/v1'
+const API_SEGMENT = 'api'
+const API_VERSION = 'v1'
+const API_V1_PREFIX = `/${API_SEGMENT}/${API_VERSION}`
 
 function normalizeApiBaseUrl(raw: string) {
   const value = (raw || '').trim()
@@ -22,9 +24,11 @@ export const API_V1_BASE_URL = `${API_BASE_URL}${API_V1_PREFIX}`
 export function toApiV1Path(endpoint: string) {
   const raw = (endpoint || '').trim()
   const path = raw.startsWith('/') ? raw : `/${raw}`
-  if (path === '/api/v1' || path === '/api/v1/') return '/'
-  if (path.startsWith('/api/v1/')) return path.slice('/api/v1'.length)
-  if (path.startsWith('/api/')) return path.slice('/api'.length)
+  const apiRoot = `/${API_SEGMENT}`
+  const apiV1Root = `/${API_SEGMENT}/${API_VERSION}`
+  if (path === apiV1Root || path === `${apiV1Root}/`) return '/'
+  if (path.startsWith(`${apiV1Root}/`)) return path.slice(apiV1Root.length)
+  if (path.startsWith(`${apiRoot}/`)) return path.slice(apiRoot.length)
   return path
 }
 
