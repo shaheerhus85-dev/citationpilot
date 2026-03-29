@@ -27,16 +27,6 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: API_ORIGIN,
     NEXT_PUBLIC_API_URL: API_ORIGIN,
-    NEXT_PUBLIC_API_BASE_PATH:
-      process.env.NEXT_PUBLIC_API_BASE_PATH || "/backend",
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/backend/:path*",
-        destination: `${API_ORIGIN}/:path*`,
-      },
-    ];
   },
 };
 
