@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, CardHeader, EmptyState, FormInput, InfoBadge, PageCard, ProtectedRoute } from '@/components/dashboard/ui'
-import { buildApiUrl } from '@/lib/env'
+import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 
 type AuditResponse = {
@@ -36,16 +36,8 @@ export default function AuditPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const response = await fetch(buildApiUrl('/audit/run'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify(formData),
-      })
-      if (!response.ok) throw new Error('Failed to run audit')
-      setResult(await response.json())
+      const response = await api.post('/audit/run', formData)
+      setResult(response.data)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Audit failed')
     } finally {

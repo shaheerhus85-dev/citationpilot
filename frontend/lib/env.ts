@@ -31,7 +31,3 @@ export function toApiV1Path(endpoint: string) {
   if (path.startsWith(`${apiRoot}/`)) return path.slice(apiRoot.length)
   return path
 }
-
-export function buildApiUrl(endpoint: string) {
-  return `${API_V1_BASE_URL}${toApiV1Path(endpoint)}`
-}

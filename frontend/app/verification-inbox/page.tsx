@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, EmptyState, InfoBadge, PageCard, ProtectedRoute } from '@/components/dashboard/ui'
-import { buildApiUrl } from '@/lib/env'
+import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 
 type VerificationRow = {
@@ -34,11 +34,8 @@ export default function VerificationInboxPage() {
 
   async function fetchRows() {
     try {
-      const response = await fetch(buildApiUrl('/verification-inbox/'), {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      })
-      if (!response.ok) throw new Error('Failed to load verification inbox')
-      const payload = await response.json()
+      const response = await api.get('/verification-inbox/')
+      const payload = response.data
       setRows(payload.items || [])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load verification inbox')
@@ -50,11 +47,7 @@ export default function VerificationInboxPage() {
   async function verifyNow(emailId: number) {
     setBusyId(emailId)
     try {
-      const response = await fetch(buildApiUrl(`/verification-inbox/${emailId}/verify-now`), {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      })
-      if (!response.ok) throw new Error('Verify action failed')
+      await api.post(`/verification-inbox/${emailId}/verify-now`)
       toast.success('Verification worker started')
       await fetchRows()
     } catch (error) {
