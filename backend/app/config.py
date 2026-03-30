@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./app.db"
     DIRECTORIES_CSV_PATH: str = "data/directories.csv"
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    UPLOADS_DIR: str = "uploads"
+    LOGO_UPLOAD_SUBDIR: str = "logos"
+    MAX_LOGO_UPLOAD_MB: int = 5
 
     GMAIL_USER: str | None = None
     GMAIL_APP_PASSWORD: str | None = None

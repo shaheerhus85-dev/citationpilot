@@ -14,7 +14,9 @@ from app.models.models import (
     SubmissionAttemptLog,
     SubmissionQueue,
     SubmissionStatus,
+    TempEmailAccount,
 )
+from app.services.temp_email_service import TempEmailService
 from automation.playwright_engine import get_automation_engine
 
 logger = logging.getLogger(__name__)
@@ -102,9 +104,49 @@ class SubmissionWorker:
                     processed += 1
                     continue
 
+                temp_email_address: str | None = None
+                if directory.requires_verification:
+                    account = (
+                        db.query(TempEmailAccount)
+                        .filter(TempEmailAccount.directory_submission_id == submission.id)
+                        .first()
+                    )
+                    if account and account.status == "active":
+                        temp_email_address = account.email_address
+                    else:
+                        try:
+                            temp_account = TempEmailService.create_account(db=db, submission_id=submission.id)
+                            temp_email_address = temp_account.get("email")
+                            db.add(
+                                SubmissionAttemptLog(
+                                    directory_submission_id=submission.id,
+                                    attempt_number=max(submission.retry_count + 1, 1),
+                                    phase="temp_email_provision",
+                                    outcome="created",
+                                    error_message=f"Temp email provisioned: {temp_email_address}",
+                                )
+                            )
+                            db.commit()
+                        except Exception as exc:
+                            logger.warning("Temp email provisioning failed for submission %s: %s", submission.id, exc)
+                            db.add(
+                                SubmissionAttemptLog(
+                                    directory_submission_id=submission.id,
+                                    attempt_number=max(submission.retry_count + 1, 1),
+                                    phase="temp_email_provision",
+                                    outcome="failed",
+                                    error_message=f"Temp email provisioning failed: {exc}",
+                                )
+                            )
+                            db.commit()
+
                 logger.info("Processing submission #%s to %s", submission.id, directory.url)
                 await asyncio.sleep(random.uniform(0.4, 1.1))
-                final_status, error_message, captcha_type, resolution_path = await self._inspect_directory(directory.url, business)
+                final_status, error_message, captcha_type, resolution_path = await self._inspect_directory(
+                    directory_url=directory.url,
+                    business=business,
+                    submission_email=temp_email_address,
+                )
                 now = datetime.utcnow()
                 submission.status = final_status
                 submission.error_message = error_message
@@ -159,12 +201,13 @@ class SubmissionWorker:
         self,
         directory_url: str,
         business: BusinessProfile,
+        submission_email: str | None = None,
     ) -> tuple[str, str | None, str | None, str]:
         engine = await get_automation_engine()
         business_data = {
             "business_name": business.business_name,
             "website": business.website,
-            "email": business.email,
+            "email": submission_email or business.email,
             "phone": business.phone,
             "description": business.description,
             "category": business.category,

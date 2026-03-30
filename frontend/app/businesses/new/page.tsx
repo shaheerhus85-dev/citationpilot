@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { AppShell } from '@/components/dashboard/app-shell'
 import { ActionButton, FormInput, FormTextArea, PageCard, ProtectedRoute, SkeletonBlock } from '@/components/dashboard/ui'
 import api from '@/lib/api'
+import { BASE_URL } from '@/lib/env'
 import { useAuthStore } from '@/lib/store'
 import { parseError } from '@/lib/utils'
 
@@ -35,6 +36,7 @@ export default function BusinessFormPage() {
   const [form, setForm] = useState(emptyForm)
   const [loading, setLoading] = useState(Boolean(editId))
   const [submitting, setSubmitting] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   useEffect(() => {
     if (!editId || !hydrated || !isAuthenticated) return
@@ -81,6 +83,29 @@ export default function BusinessFormPage() {
     }
   }
 
+  async function handleLogoUpload(file: File | null) {
+    if (!file) return
+    const isImage = file.type.startsWith('image/')
+    if (!isImage) {
+      toast.error('Please upload an image file (PNG, JPG, WEBP, SVG)')
+      return
+    }
+    setLogoUploading(true)
+    try {
+      const payload = new FormData()
+      payload.append('logo', file)
+      const response = await api.post('/businesses/logo-upload', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setForm((current) => ({ ...current, logo_url: response.data.logo_url || '' }))
+      toast.success('Logo uploaded successfully')
+    } catch (error) {
+      toast.error(parseError(error))
+    } finally {
+      setLogoUploading(false)
+    }
+  }
+
   return (
     <ProtectedRoute
       isAuthenticated={isAuthenticated}
@@ -103,7 +128,6 @@ export default function BusinessFormPage() {
                 ['email', 'Email', false],
                 ['phone', 'Phone', false],
                 ['website', 'Website', false],
-                ['logo_url', 'Logo URL', false],
                 ['address_line1', 'Address Line 1', false],
                 ['address_line2', 'Address Line 2', false],
                 ['city', 'City', false],
@@ -120,6 +144,34 @@ export default function BusinessFormPage() {
                   required={required}
                 />
               ))}
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-slate-700">Business Logo</label>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    onChange={(event) => {
+                      const nextFile = event.target.files?.[0] || null
+                      void handleLogoUpload(nextFile)
+                    }}
+                    className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                  />
+                  <p className="mt-2 text-xs text-slate-500">
+                    Upload PNG/JPG/WEBP/SVG. Max 5MB. Directories that require a brand image will use this file.
+                  </p>
+                  {logoUploading ? <p className="mt-2 text-sm text-slate-600">Uploading logo...</p> : null}
+                  {form.logo_url ? (
+                    <div className="mt-3 flex items-center gap-3">
+                      <img
+                        src={form.logo_url.startsWith('http') ? form.logo_url : `${BASE_URL}${form.logo_url}`}
+                        alt="Business logo preview"
+                        className="h-14 w-14 rounded-xl border border-slate-200 object-cover"
+                      />
+                      <span className="text-xs text-slate-500 break-all">{form.logo_url}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <div className="md:col-span-2">
                 <FormTextArea
                   label="Description"

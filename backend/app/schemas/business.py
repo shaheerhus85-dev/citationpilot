@@ -27,3 +27,7 @@ class BusinessResponse(BusinessRequest):
     id: int
     user_id: int
     created_at: datetime | None = None
+
+
+class LogoUploadResponse(BaseModel):
+    logo_url: str

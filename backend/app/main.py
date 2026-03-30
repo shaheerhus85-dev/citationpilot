@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api import auth, audit, businesses, campaigns, contact, dashboard, directories, internal, manual_queue, profile, profiles, submissions, verification_inbox
 from app.config import get_settings
@@ -72,6 +73,9 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Database startup init skipped (INIT_DB_ON_STARTUP=false)")
 
+    uploads_root = Path(__file__).resolve().parents[1] / settings.UPLOADS_DIR
+    uploads_root.mkdir(parents=True, exist_ok=True)
+
     if ENABLE_WORKERS:
         try:
             ensure_submission_worker_running()
@@ -92,6 +96,10 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan,
 )
+
+uploads_root = Path(__file__).resolve().parents[1] / settings.UPLOADS_DIR
+uploads_root.mkdir(parents=True, exist_ok=True)
+app.mount(f"/{settings.UPLOADS_DIR.strip('/')}", StaticFiles(directory=uploads_root), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

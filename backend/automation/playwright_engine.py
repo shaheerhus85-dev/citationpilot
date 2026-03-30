@@ -270,8 +270,14 @@ class PlaywrightAutomationEngine:
                 page.set_default_timeout(settings.PLAYWRIGHT_TIMEOUT_MS)
 
                 logger.info("Navigating to %s (attempt %s/%s)", directory_url, attempt, max_attempts)
-                await page.goto(directory_url, wait_until="domcontentloaded")
+                response = await page.goto(directory_url, wait_until="domcontentloaded")
                 await self._human_pause()
+                if response and response.status >= 400:
+                    last_error = f"Directory returned HTTP {response.status}"
+                    if attempt < max_attempts:
+                        await asyncio.sleep(random.uniform(0.8, 2.0))
+                        continue
+                    return False, last_error, None, None, None
 
                 captcha_type = await CaptchaDetector.detect_captcha(page)
                 if captcha_type:
@@ -323,7 +329,9 @@ class PlaywrightAutomationEngine:
                     logger.info("Submission successful")
                     return True, None, captcha_type, None, None
 
-                return True, None, captcha_type, None, None
+                if response and response.status and response.status < 400:
+                    return True, None, captcha_type, None, None
+                return False, "Directory page load verification failed", captcha_type, None, None
             except Exception as e:
                 last_error = str(e)
                 logger.warning("Submission attempt %s failed: %s", attempt, last_error)

@@ -27,6 +27,12 @@ export default function CampaignCreatePage() {
   const [campaignName, setCampaignName] = useState('')
   const [targetCountry, setTargetCountry] = useState('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [selectionInsights, setSelectionInsights] = useState<{
+    estimatedSuccessRate: number
+    estimatedCompletionTimeMinutes: number
+    usedFallbackCategory: boolean
+    fallbackReason: string | null
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -158,15 +164,17 @@ export default function CampaignCreatePage() {
               <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-950">Recommended directories</h2>
-                  <p className="mt-1 text-sm text-slate-500">Tier-based recommendations based on business category and country.</p>
+                  <p className="mt-1 text-sm text-slate-500">Matched from our validated directory database using business niche, target country, and historical success patterns.</p>
                 </div>
                 <div className="text-sm text-slate-500">{selectedIds.length} selected for this campaign</div>
               </div>
               <DirectorySelector
+                businessId={selectedBusiness ? Number(selectedBusiness.id) : undefined}
                 vertical={selectedBusiness?.category}
-                country={selectedBusiness?.country}
+                country={targetCountry || selectedBusiness?.country}
                 selectedIds={selectedIds}
                 onChange={setSelectedIds}
+                onInsightsChange={setSelectionInsights}
               />
             </PageCard>
 
@@ -175,7 +183,14 @@ export default function CampaignCreatePage() {
                 <div>
                   <div className="text-sm font-medium text-slate-500">Estimated campaign footprint</div>
                   <div className="mt-2 text-2xl font-semibold text-slate-950">{selectedIds.length} directories</div>
-                  <div className="mt-1 text-sm text-slate-500">High-tier platforms are more likely to require manual review.</div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    {selectionInsights
+                      ? `Estimated success ${Math.round(selectionInsights.estimatedSuccessRate * 100)}% · approx ${selectionInsights.estimatedCompletionTimeMinutes} minutes`
+                      : 'Selection auto-adjusts by niche relevance, country fit, CAPTCHA risk, and historical outcomes.'}
+                  </div>
+                  {selectionInsights?.fallbackReason ? (
+                    <div className="mt-2 text-xs text-amber-700">{selectionInsights.fallbackReason}</div>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <ActionButton href="/businesses/new">Add Another Business</ActionButton>
