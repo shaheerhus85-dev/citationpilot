@@ -1,18 +1,11 @@
 /** @type {import('next').NextConfig} */
-function normalizeApiOrigin(raw) {
-  const value = (raw || "https://citationpilot-production.up.railway.app").trim().replace(/\/+$/, "");
-  if (!value) return "https://citationpilot-production.up.railway.app";
-
-  // Prevent mixed-content in production when an http URL is mistakenly configured.
-  if (value.startsWith("http://")) {
-    const withoutScheme = value.slice("http://".length);
-    const isLocalhost = withoutScheme.startsWith("localhost") || withoutScheme.startsWith("127.0.0.1");
-    if (!isLocalhost) return `https://${withoutScheme}`;
-  }
-  return value;
-}
-
-const API_ORIGIN = normalizeApiOrigin(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL);
+const API_ORIGIN = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://citationpilot-production.up.railway.app"
+)
+  .replace("http://", "https://")
+  .replace(/\/+$/, "");
 
 const nextConfig = {
   reactStrictMode: true,

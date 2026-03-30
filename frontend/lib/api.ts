@@ -11,19 +11,8 @@ export const api: AxiosInstance = axios.create({
   },
 })
 
-function normalizeBaseUrl(raw: string) {
-  const value = (raw || '').trim()
-  if (!value) return API_V1_BASE_URL
-  if (value.startsWith('http://')) {
-    const withoutScheme = value.slice('http://'.length)
-    const isLocalhost = withoutScheme.startsWith('localhost') || withoutScheme.startsWith('127.0.0.1')
-    return isLocalhost ? value : `https://${withoutScheme}`
-  }
-  return value
-}
-
 api.interceptors.request.use((config) => {
-  config.baseURL = normalizeBaseUrl(String(config.baseURL || API_V1_BASE_URL))
+  config.baseURL = API_V1_BASE_URL
   config.url = toApiV1Path(String(config.url || '/'))
 
   if (typeof window !== 'undefined') {
