@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/v1/businesses", tags=["businesses"])
 
 
 @router.post("/", response_model=BusinessResponse)
+@router.post("", response_model=BusinessResponse, include_in_schema=False)
 def create_business(
     payload: BusinessRequest,
     db: Session = Depends(get_db),
@@ -26,6 +27,7 @@ def create_business(
 
 
 @router.get("/", response_model=list[BusinessResponse])
+@router.get("", response_model=list[BusinessResponse], include_in_schema=False)
 def list_businesses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
