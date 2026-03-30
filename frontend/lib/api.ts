@@ -4,15 +4,23 @@ import toast from 'react-hot-toast'
 import { API_V1_BASE_URL, toApiV1Path } from '@/lib/env'
 import { useAuthStore } from '@/lib/store'
 
+const ENFORCED_API_V1_BASE = 'https://citationpilot-production.up.railway.app/api/v1'
+
+function enforceHttps(value: string) {
+  return value.replace(/^http:\/\//i, 'https://')
+}
+
 export const api: AxiosInstance = axios.create({
-  baseURL: API_V1_BASE_URL,
+  baseURL: enforceHttps(API_V1_BASE_URL || ENFORCED_API_V1_BASE),
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
 api.interceptors.request.use((config) => {
-  config.baseURL = API_V1_BASE_URL
+  const currentBase = String(config.baseURL || API_V1_BASE_URL || ENFORCED_API_V1_BASE).trim()
+  config.baseURL = enforceHttps(currentBase || ENFORCED_API_V1_BASE)
+  config.url = enforceHttps(String(config.url || '/'))
   config.url = toApiV1Path(String(config.url || '/'))
 
   if (typeof window !== 'undefined') {

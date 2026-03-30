@@ -3,8 +3,8 @@ const API_SEGMENT = 'api'
 const API_VERSION = 'v1'
 const API_V1_PREFIX = `/${API_SEGMENT}/${API_VERSION}`
 
-const RAW_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_URL
-export const BASE_URL = RAW_BASE_URL.replace('http://', 'https://').replace(/\/+$/, '')
+const RAW_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL
+export const BASE_URL = RAW_BASE_URL.trim().replace('http://', 'https://').replace(/\/+$/, '')
 export const API_V1_BASE_URL = `${BASE_URL}${API_V1_PREFIX}`
 
 export function toApiV1Path(endpoint: string) {

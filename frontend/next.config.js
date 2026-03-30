@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const API_ORIGIN = (
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
   "https://citationpilot-production.up.railway.app"
 )
   .replace("http://", "https://")
@@ -19,7 +18,6 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_BASE_URL: API_ORIGIN,
-    NEXT_PUBLIC_API_URL: API_ORIGIN,
   },
 };
 
