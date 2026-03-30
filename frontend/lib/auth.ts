@@ -3,16 +3,18 @@
 import api from '@/lib/api'
 
 const ACCESS_TOKEN_KEY = 'access_token'
+const TOKEN_KEY = 'token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_KEY = 'user'
 
 export function getAuthToken() {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem(ACCESS_TOKEN_KEY)
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY)
 }
 
 export function setAuthToken(accessToken: string, refreshToken: string, user?: unknown) {
   if (typeof window === 'undefined') return
+  localStorage.setItem(TOKEN_KEY, accessToken)
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
@@ -20,6 +22,7 @@ export function setAuthToken(accessToken: string, refreshToken: string, user?: u
 
 export function clearAuthToken() {
   if (typeof window === 'undefined') return
+  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   localStorage.removeItem(USER_KEY)

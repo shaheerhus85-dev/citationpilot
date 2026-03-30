@@ -25,6 +25,7 @@ interface AuthStore {
 }
 
 const ACCESS_TOKEN_KEY = 'access_token'
+const TOKEN_KEY = 'token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_KEY = 'user'
 
@@ -34,6 +35,7 @@ function isBrowser() {
 
 function clearPersistedAuth() {
   if (!isBrowser()) return
+  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
@@ -41,6 +43,7 @@ function clearPersistedAuth() {
 
 function persistAuth(accessToken: string, refreshToken: string, user: User) {
   if (!isBrowser()) return
+  localStorage.setItem(TOKEN_KEY, accessToken)
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
@@ -91,7 +94,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       return
     }
 
-    const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
+    const accessToken = localStorage.getItem(TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY)
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
     const storedUser = parseStoredUser(localStorage.getItem(USER_KEY))
     set({ accessToken, refreshToken, user: storedUser, isBootstrapping: true })

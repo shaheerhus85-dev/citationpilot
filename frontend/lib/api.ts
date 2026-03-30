@@ -13,10 +13,11 @@ export const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((config) => {
   config.url = toApiV1Path(String(config.url || '/'))
-  console.log('API REQUEST:', `${config.baseURL || ''}${config.url || ''}`)
 
   if (typeof window !== 'undefined') {
-    const token = useAuthStore.getState().accessToken
+    const token = localStorage.getItem('token') || useAuthStore.getState().accessToken || localStorage.getItem('access_token')
+    console.log('TOKEN:', token)
+    console.log('API REQUEST:', `${config.baseURL || ''}${config.url || ''}`)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
