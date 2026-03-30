@@ -26,6 +26,7 @@ class CampaignCreateRequest(BaseModel):
 
 
 @router.post("/", response_model=SubmissionRequestResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SubmissionRequestResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_campaign(
     payload: CampaignCreateRequest,
     db: Session = Depends(get_db),
@@ -69,6 +70,7 @@ def create_campaign(
 
 
 @router.get("/", response_model=list[SubmissionRequestResponse])
+@router.get("", response_model=list[SubmissionRequestResponse], include_in_schema=False)
 def list_campaigns(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
