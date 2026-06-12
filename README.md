@@ -127,7 +127,7 @@ To run this application locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/shaheerhus85/citationpilot.git
+   git clone https://github.com/shaheerhus85-dev/citationpilot.git
    cd citationpilot
    ```
 
@@ -170,15 +170,15 @@ Client-side initialization configures dynamically using the applet configuration
 
 ## 11. Deployment
 
-Production builds compile down to efficient, search-crawler friendly static SPA files outputting to the `dist/` workspace. Simply upload the static assets inside `dist/` to any static hosting service (Firebase Hosting, Cloud Run, Vercel, Netlify) to execute live client citation campaigns.
+Production builds compile down to efficient static SPA files outputting to the `dist/` workspace. Simply upload the static assets inside `dist/` to any static hosting service (Firebase Hosting, Cloud Run, Vercel, Netlify) to run the interactive proof-of-work demo.
 
 ---
 
 ## 12. Future Backend Phase
 
-As a proof-of-work project, active automation crawlers are currently represented as a high-fidelity simulator. Future backend stages include:
+This system is currently structured as a client-side Frontend MVP and a proof-of-work workbench. Active crawlers and operations are represented as a high-fidelity simulator. Future planned backend automation phases include:
 * **Custom 6-digit email OTP verification using backend functions and transactional email service.**
-* **Playwright Worker Node Cluster**: A scalable Express service running headless Chrome instances to register accounts, enter NAP coordinates, verify confirmation strings, and record resulting crawl links directly to Firestore.
+* **Playwright Worker Node Cluster**: A scalable Express service running headless Chrome instances to register accounts, enter NAP coordinates, verify confirmation strings, and record resulting crawl links directly to Firestore. Active production automation is not running in this frontend proof-of-work state.
 
 ---
 
