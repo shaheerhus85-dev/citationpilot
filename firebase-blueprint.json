@@ -1,0 +1,152 @@
+{
+  "entities": {
+    "BusinessProfile": {
+      "title": "BusinessProfile",
+      "description": "Local business information managed inside CitationPilot.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "legalName": { "type": "string" },
+        "website": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "country": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "mainCategory": { "type": "string" },
+        "secondaryCategories": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "longDescription": { "type": "string" },
+        "openingHours": { "type": "string" },
+        "facebook": { "type": "string" },
+        "instagram": { "type": "string" },
+        "linkedIn": { "type": "string" },
+        "youtube": { "type": "string" },
+        "twitter": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "businessName", "website", "email", "phone", "address", "city", "state", "country", "postalCode", "mainCategory", "createdAt", "updatedAt"]
+    },
+    "Directory": {
+      "title": "Directory",
+      "description": "SEO business directory databases.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "domain": { "type": "string" },
+        "country": { "type": "string" },
+        "category": { "type": "string" },
+        "authorityScore": { "type": "number" },
+        "submissionType": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "status": { "type": "string" },
+        "automationReady": { "type": "boolean" },
+        "requiresEmailVerification": { "type": "boolean" },
+        "captchaLikely": { "type": "boolean" },
+        "freeOrPaid": { "type": "string" },
+        "notes": { "type": "string" },
+        "lastChecked": { "type": "string" }
+      },
+      "required": ["id", "name", "domain", "country", "category", "authorityScore", "submissionType", "difficulty", "status", "automationReady", "requiresEmailVerification", "captchaLikely", "freeOrPaid"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "Citation campaign runs.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "businessProfileId": { "type": "string" },
+        "name": { "type": "string" },
+        "targetCountry": { "type": "string" },
+        "targetCity": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string" },
+        "mode": { "type": "string" },
+        "totalDirectories": { "type": "number" },
+        "submittedCount": { "type": "number" },
+        "verifiedCount": { "type": "number" },
+        "failedCount": { "type": "number" },
+        "manualReviewCount": { "type": "number" },
+        "progress": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "businessProfileId", "name", "targetCountry", "targetCity", "category", "status", "mode", "totalDirectories", "submittedCount", "verifiedCount", "failedCount", "manualReviewCount", "progress", "createdAt", "updatedAt"]
+    },
+    "CampaignDirectorySubmission": {
+      "title": "CampaignDirectorySubmission",
+      "description": "Specific submission detail of a campaign to a directory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "directoryId": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "status": { "type": "string" },
+        "attempts": { "type": "number" },
+        "lastAttemptAt": { "type": "string", "format": "date-time" },
+        "submittedUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "issueType": { "type": "string" },
+        "logs": {
+          "type": "array",
+          "description": "Array of logs for the submission worker."
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "campaignId", "directoryId", "workspaceId", "status", "attempts", "logs", "createdAt", "updatedAt"]
+    },
+    "ManualReviewTask": {
+      "title": "ManualReviewTask",
+      "description": "Manual review tasks needing user resolution.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "submissionId": { "type": "string" },
+        "businessProfileId": { "type": "string" },
+        "directoryId": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "issueType": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "resolvedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "campaignId", "submissionId", "businessProfileId", "directoryId", "workspaceId", "issueType", "priority", "status", "notes", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "BusinessProfile",
+      "description": "Users business profiles collection"
+    },
+    "/directories/{directoryId}": {
+      "schema": "Directory",
+      "description": "Directory Database collection"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Campaign lists collection"
+    },
+    "/submissions/{submissionId}": {
+      "schema": "CampaignDirectorySubmission",
+      "description": "Directory submission logs collection"
+    },
+    "/manualTasks/{taskId}": {
+      "schema": "ManualReviewTask",
+      "description": "Manual human validation tasks collection"
+    }
+  }
+}

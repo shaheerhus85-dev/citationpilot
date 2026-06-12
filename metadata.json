@@ -1,0 +1,6 @@
+{
+  "name": "CitationPilot",
+  "description": "Local SEO Citation Automation Workbench for businesses, SEO operators, and automation workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

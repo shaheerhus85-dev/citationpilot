@@ -1,0 +1,157 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reuseable Global Helper Primitives (Phase 3)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 2. Entity Validation Blueprints (Pillars 2, 5 & 12)
+    function isValidBusinessProfile(data) {
+      return data.keys().hasAll(['id', 'workspaceId', 'businessName', 'legalName', 'website', 'email', 'phone', 'address', 'city', 'state', 'country', 'postalCode', 'mainCategory', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() <= 128
+        && data.businessName is string && data.businessName.size() <= 256
+        && data.legalName is string && data.legalName.size() <= 256
+        && data.website is string && data.website.size() <= 512
+        && data.email is string && data.email.size() <= 256
+        && data.phone is string && data.phone.size() <= 64
+        && data.address is string && data.address.size() <= 512
+        && data.city is string && data.city.size() <= 256
+        && data.state is string && data.state.size() <= 128
+        && data.country is string && data.country.size() <= 128
+        && data.postalCode is string && data.postalCode.size() <= 64
+        && data.mainCategory is string && data.mainCategory.size() <= 256
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidDirectory(data) {
+      return data.keys().hasAll(['id', 'name', 'domain', 'country', 'category', 'authorityScore', 'submissionType', 'difficulty', 'status', 'automationReady', 'requiresEmailVerification', 'captchaLikely', 'freeOrPaid'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 256
+        && data.domain is string && data.domain.size() <= 256
+        && data.country is string && data.country.size() <= 128
+        && data.category is string && data.category.size() <= 128
+        && data.authorityScore is number
+        && data.submissionType is string && data.submissionType.size() <= 128
+        && data.difficulty is string && data.difficulty.size() <= 64
+        && data.status is string && data.status.size() <= 64
+        && data.automationReady is bool
+        && data.requiresEmailVerification is bool
+        && data.captchaLikely is bool
+        && data.freeOrPaid is string && data.freeOrPaid.size() <= 64;
+    }
+
+    function isValidCampaign(data) {
+      return data.keys().hasAll(['id', 'workspaceId', 'businessProfileId', 'name', 'targetCountry', 'targetCity', 'category', 'status', 'mode', 'totalDirectories', 'submittedCount', 'verifiedCount', 'failedCount', 'manualReviewCount', 'progress', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() <= 128
+        && data.businessProfileId is string && data.businessProfileId.size() <= 128
+        && data.name is string && data.name.size() <= 256
+        && data.targetCountry is string && data.targetCountry.size() <= 128
+        && data.targetCity is string && data.targetCity.size() <= 128
+        && data.category is string && data.category.size() <= 128
+        && data.status is string && data.status.size() <= 128
+        && data.mode is string && data.mode.size() <= 128
+        && data.totalDirectories is number
+        && data.submittedCount is number
+        && data.verifiedCount is number
+        && data.failedCount is number
+        && data.manualReviewCount is number
+        && data.progress is number
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['id', 'campaignId', 'directoryId', 'workspaceId', 'status', 'attempts', 'logs', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.campaignId is string && data.campaignId.size() <= 128
+        && data.directoryId is string && data.directoryId.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() <= 128
+        && data.status is string && data.status.size() <= 128
+        && data.attempts is number
+        && data.logs is list
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidManualTask(data) {
+      return data.keys().hasAll(['id', 'campaignId', 'submissionId', 'businessProfileId', 'directoryId', 'workspaceId', 'issueType', 'priority', 'status', 'notes', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.campaignId is string && data.campaignId.size() <= 128
+        && data.submissionId is string && data.submissionId.size() <= 128
+        && data.businessProfileId is string && data.businessProfileId.size() <= 128
+        && data.directoryId is string && data.directoryId.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() <= 128
+        && data.issueType is string && data.issueType.size() <= 128
+        && data.priority is string && data.priority.size() <= 64
+        && data.status is string && data.status.size() <= 64
+        && data.notes is string && data.notes.size() <= 1024
+        && data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // ----------------- COLLECTIONS MATCHES -----------------
+
+    // Business Profile Collection
+    match /businesses/{businessId} {
+      allow create: if isSignedIn() && isValidId(businessId) && isValidBusinessProfile(incoming()) && incoming().workspaceId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.workspaceId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(businessId) && isValidBusinessProfile(incoming()) && incoming().workspaceId == request.auth.uid && existing().workspaceId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(businessId) && resource.data.workspaceId == request.auth.uid;
+    }
+
+    // Directories Database Collection (Global Public Reference Library - Read-only)
+    match /directories/{directoryId} {
+      allow create, update, delete: if false;
+      allow read: if isSignedIn();
+    }
+
+    // Campaigns Collection
+    match /campaigns/{campaignId} {
+      allow create: if isSignedIn() && isValidId(campaignId) && isValidCampaign(incoming()) && incoming().workspaceId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.workspaceId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(campaignId) && isValidCampaign(incoming()) && incoming().workspaceId == request.auth.uid && existing().workspaceId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(campaignId) && resource.data.workspaceId == request.auth.uid;
+    }
+
+    // Submissions Collection
+    match /submissions/{submissionId} {
+      allow create: if isSignedIn() && isValidId(submissionId) && isValidSubmission(incoming()) && incoming().workspaceId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.workspaceId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(submissionId) && isValidSubmission(incoming()) && incoming().workspaceId == request.auth.uid && existing().workspaceId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(submissionId) && resource.data.workspaceId == request.auth.uid;
+    }
+
+    // Manual Tasks Queue Collection
+    match /manualTasks/{taskId} {
+      allow create: if isSignedIn() && isValidId(taskId) && isValidManualTask(incoming()) && incoming().workspaceId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.workspaceId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(taskId) && isValidManualTask(incoming()) && incoming().workspaceId == request.auth.uid && existing().workspaceId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(taskId) && resource.data.workspaceId == request.auth.uid;
+    }
+  }
+}
