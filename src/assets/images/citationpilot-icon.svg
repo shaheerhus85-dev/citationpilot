@@ -1,0 +1,30 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" id="cp-icon-svg">
+  <defs>
+    <linearGradient id="cp-grad-i" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#38bdf8" />
+      <stop offset="50%" stopColor="#4f46e5" />
+      <stop offset="100%" stopColor="#818cf8" />
+    </linearGradient>
+    <filter id="cp-glow-i" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#38bdf8" floodOpacity="0.4" />
+    </filter>
+  </defs>
+
+  {/* Compass Outer Ring */}
+  <circle cx="50" cy="50" r="32" stroke="url(#cp-grad-i)" strokeWidth="4" opacity="0.95" />
+
+  {/* Directional points */}
+  <polygon points="50,11 46.5,17 53.5,17" fill="url(#cp-grad-i)" />
+  <polygon points="50,89 46.5,83 53.5,83" fill="url(#cp-grad-i)" />
+  <polygon points="89,50 83,46.5 83,53.5" fill="url(#cp-grad-i)" />
+  <polygon points="11,50 17,46.5 17,53.5" fill="url(#cp-grad-i)" />
+
+  {/* Location Pin */}
+  <path d="M50,27 C41.5,27 36,32.5 36,41 C36,52.5 50,67 50,67 C50,67 64,52.5 64,41 C64,32.5 58.5,27 50,27 Z" fill="url(#cp-grad-i)" filter="url(#cp-glow-i)" />
+  <circle cx="50" cy="39.5" r="4.5" fill="#18181b" />
+
+  {/* Automation/Route Line */}
+  <path d="M20,63 Q52,48 80,63" fill="none" stroke="url(#cp-grad-i)" strokeWidth="3" strokeLinecap="round" />
+  <circle cx="34" cy="56.5" r="4.5" fill="#38bdf8" stroke="#18181b" strokeWidth="1.5" />
+  <circle cx="68" cy="57.5" r="4.5" fill="#818cf8" stroke="#18181b" strokeWidth="1.5" />
+</svg>

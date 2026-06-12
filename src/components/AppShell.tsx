@@ -4,6 +4,7 @@ import {
   Settings, CreditCard, HelpCircle, LogOut, Sun, Moon, 
   Menu, X, Bell, Search, Globe, ChevronDown, Sparkles, Mail, Cpu, Compass
 } from 'lucide-react';
+import Logo, { LogoIcon } from './Logo';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -78,16 +79,8 @@ export default function AppShell({
         
         {/* Brand logo bar */}
         <div className="p-4 h-16 flex items-center justify-between border-b border-gray-500/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm">
-              <Compass className="w-4.5 h-4.5 animate-pulse" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-sm tracking-tight leading-none text-white">CitationPilot</span>
-              <span className="text-[9px] uppercase tracking-wider text-sky-500 font-bold">WORKBENCH</span>
-            </div>
-          </div>
-          <span className="px-1.5 py-0.5 rounded text-[8px] font-mono bg-sky-500/10 text-sky-500 font-bold uppercase border border-sky-500/20">PROTOTYPE</span>
+          <Logo theme={theme} size="sm" showSubtitle={true} />
+          <span className="px-1.5 py-0.5 rounded text-[8px] font-mono bg-sky-500/10 text-sky-500 font-bold uppercase border border-sky-500/20 shrink-0">PROTOTYPE</span>
         </div>
 
         {/* Workspace Switcher */}
@@ -209,12 +202,7 @@ export default function AppShell({
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-sm">
-            <Compass className="w-4 h-4" />
-          </div>
-          <span className="font-display font-bold text-sm tracking-tight">CitationPilot</span>
-        </div>
+        <Logo theme={theme} size="sm" showSubtitle={false} />
 
         {/* Mobile quick icons */}
         <div className="flex items-center gap-2">

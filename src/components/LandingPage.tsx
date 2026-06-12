@@ -4,6 +4,7 @@ import {
   Settings, Layers, ShieldCheck, Sparkles, Database, 
   ListChecks, Globe, MessageSquare, Star, ArrowUpRight
 } from 'lucide-react';
+import Logo from './Logo';
 
 interface LandingPageProps {
   onStartDemo: () => void;
@@ -50,15 +51,7 @@ export default function LandingPage({ onStartDemo, onGoToLogin, theme, setTheme 
         theme === 'dark' ? 'border-white/[0.06] bg-[#070707]/75' : 'border-[#E2E8F0] bg-white/75'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-sky-500/15">
-              <span className="font-display tracking-tight text-lg">C</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-extrabold text-lg tracking-tight leading-none">CitationPilot</span>
-              <span className="text-[10px] uppercase tracking-widest text-sky-500 font-semibold">SEO Automation</span>
-            </div>
-          </div>
+          <Logo theme={theme} size="md" showSubtitle={true} />
 
           <nav className="hidden md:flex items-center gap-8">
             <a href="#problems" className={`text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-slate-900'}`}>The Problem</a>
